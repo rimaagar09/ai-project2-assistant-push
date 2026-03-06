@@ -1,0 +1,23 @@
+{
+  "name": "rws-xplorerws-discovery",
+  "version": "1.0.0",
+  "description": "RWS XploreRWS Non-Gaming Loyalty Program — Discovery Dashboard & PM Assets",
+  "main": "dashboard/RWSDiscoveryDashboard.jsx",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.4.0"
+  },
+  "keywords": ["rws", "loyalty", "sessionm", "discovery", "brd"],
+  "author": "RWS XploreRWS Team",
+  "license": "UNLICENSED",
+  "private": true
+}
