@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BRD Review — RWS XploreRWS vs BRD Skill Standard</title>
+<style>
+:root{--bg:#0d1b2a;--card:#162433;--card2:#1a2d3e;--border:#2a4057;--text:#e8edf2;--muted:#8fa3b8;--green:#27ae60;--red:#e74c3c;--orange:#e67e22;--yellow:#f0b429;--blue:#00c6ff;--purple:#a855f7;--teal:#00b4a0;--green-bg:rgba(39,174,96,.1);--red-bg:rgba(231,76,60,.1);--orange-bg:rgba(230,126,34,.1);--yellow-bg:rgba(240,180,41,.1);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;}
+.deck{width:100vw;height:100vh;position:relative;}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;padding:20px 44px 56px;opacity:0;pointer-events:none;overflow:hidden;transition:opacity .3s ease,transform .3s ease;transform:translateX(36px);}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.prev{opacity:0;transform:translateX(-36px);}
+.nav{position:fixed;bottom:15px;right:26px;display:flex;gap:8px;z-index:200;align-items:center;}
+.nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;}
+.nav button:hover{background:#1e3a5c;border-color:var(--blue);}
+.counter{color:var(--muted);font-size:11px;min-width:48px;text-align:center;}
+.progress-bar{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green));transition:width .3s;}
+.dots{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:200;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .2s;}
+.dot.on{background:var(--blue);transform:scale(1.5);}
+.lbl{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+h2{font-size:20px;font-weight:800;line-height:1.2;}
+h3{font-size:11.5px;font-weight:700;}
+.sm{font-size:10.5px;color:var(--muted);line-height:1.5;}
+.hdr{display:flex;align-items:center;gap:11px;margin-bottom:10px;}
+.icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 13px;}
+.card.gr{border-color:var(--green);}.card.rd{border-color:var(--red);}.card.or{border-color:var(--orange);}.card.yw{border-color:var(--yellow);}.card.bl{border-color:var(--blue);}
+table{width:100%;border-collapse:collapse;}
+th{background:#1a3a5c;color:var(--blue);padding:5px 9px;text-align:left;font-weight:700;font-size:10.5px;}
+td{padding:4px 9px;border-bottom:1px solid var(--border);font-size:10.5px;vertical-align:top;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;}
+.pill.g{background:var(--green-bg);color:var(--green);}.pill.r{background:var(--red-bg);color:var(--red);}.pill.o{background:var(--orange-bg);color:var(--orange);}.pill.y{background:var(--yellow-bg);color:var(--yellow);}
+ul.ck{margin:0;padding:0;}
+ul.ck li{list-style:none;padding-left:16px;position:relative;margin-bottom:3px;font-size:10.5px;}
+ul.ck li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:700;}
+ul.ck li.x::before{content:'✗';color:var(--red);}
+ul.ck li.w::before{content:'⚠';color:var(--yellow);}
+.badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,198,255,.08);border:1px solid rgba(0,198,255,.2);border-radius:20px;padding:3px 11px;font-size:10px;font-weight:700;color:var(--blue);}
+.gap-row{display:flex;gap:8px;align-items:flex-start;padding:6px 9px;border-radius:6px;margin-bottom:5px;}
+.gap-row.cr{background:var(--red-bg);border-left:3px solid var(--red);}
+.gap-row.wa{background:var(--orange-bg);border-left:3px solid var(--orange);}
+.gap-row.ni{background:var(--yellow-bg);border-left:3px solid var(--yellow);}
+.num{flex-shrink:0;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- SLIDE 1: SCORECARD -->
+<section class="slide active" id="s1">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div class="lbl" style="margin-bottom:0;">BRD Skill Compliance Review · XploreRWS NGLP · v1.3</div>
+    <div class="badge">📋 BRD Skill Standard — 14 Sections · Quality Rules</div>
+  </div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1e5799,#00c6ff);">🔍</div>
+    <h2>RWS XploreRWS BRD — Skill Compliance Scorecard &amp; Gap Analysis</h2>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:9px;align-items:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:88px;height:88px;border-radius:50%;border:3px solid var(--orange);flex-shrink:0;">
+      <span style="font-size:26px;font-weight:900;color:var(--orange);">61%</span>
+      <span style="font-size:9px;color:var(--muted);">OVERALL</span>
+    </div>
+    <div style="flex:1;">
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;">
+        <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--green);">6</div><div style="font-size:9px;color:var(--muted);">Sections ✓</div></div>
+        <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--red);">5</div><div style="font-size:9px;color:var(--muted);">Missing ✗</div></div>
+        <div style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--orange);">3</div><div style="font-size:9px;color:var(--muted);">Partial ⚠</div></div>
+        <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--red);">0</div><div style="font-size:9px;color:var(--muted);">FRs with AC ✗</div></div>
+        <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--red);">0</div><div style="font-size:9px;color:var(--muted);">NFR Targets ✗</div></div>
+        <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:7px;padding:5px 11px;text-align:center;"><div style="font-size:19px;font-weight:900;color:var(--red);">0</div><div style="font-size:9px;color:var(--muted);">Priority Tags ✗</div></div>
+      </div>
+      <p class="sm">Strong loyalty domain coverage but <strong style="color:var(--orange);">significantly incomplete</strong> against the BRD Skill 14-section standard. Critical gaps: no acceptance criteria on any FR, no measurable NFR targets, no risk register, no architecture section, no user personas, no priority tags.</p>
+    </div>
+  </div>
+  <table style="font-size:10px;">
+    <thead><tr><th style="width:25px;">#</th><th>Skill Section Required</th><th style="width:105px;">Status</th><th>Finding</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Document Control</td><td><span class="pill g">✓ Present</span></td><td>Revision history, share history, 3 approvers with signatures — excellent</td></tr>
+      <tr><td>2</td><td>Executive Summary</td><td><span class="pill o">⚠ Partial</span></td><td>Objectives exist but no business problem statement or success metrics narrative</td></tr>
+      <tr><td>3</td><td>Project Scope (in/out, assumptions)</td><td><span class="pill g">✓ Present</span></td><td>Sections 6 &amp; 7 cover assumptions and explicit out-of-scope items clearly</td></tr>
+      <tr><td>4</td><td>Stakeholders &amp; User Personas</td><td><span class="pill o">⚠ Partial</span></td><td>Stakeholder table good — but zero user personas (goals, pain points, journeys)</td></tr>
+      <tr><td>5</td><td>Business Requirements (BR-XXX + priority + rationale)</td><td><span class="pill r">✗ Missing</span></td><td>5 objectives listed but not structured as BR-XXX with priority or rationale</td></tr>
+      <tr><td>6</td><td>Functional Requirements (FR-XXX + priority + AC)</td><td><span class="pill o">⚠ Partial</span></td><td>~80 FRs documented but NO priority column, NO acceptance criteria on any FR</td></tr>
+      <tr><td>7</td><td>Non-Functional Requirements (measurable targets)</td><td><span class="pill r">✗ Missing</span></td><td>Only 2 NFRs, blank System &amp; Rating columns, no measurable targets</td></tr>
+      <tr><td>8</td><td>System Architecture Overview</td><td><span class="pill r">✗ Missing</span></td><td>Entire section absent — no component diagram, no integration flow description</td></tr>
+      <tr><td>9</td><td>Data Requirements (entities, flows, retention)</td><td><span class="pill g">✓ Present</span></td><td>Custom attributes, point accounts, data cloud exports — strong coverage</td></tr>
+      <tr><td>10</td><td>User Journey / Process Flows</td><td><span class="pill r">✗ Missing</span></td><td>No end-to-end journeys: registration, earn, redeem, tier transitions</td></tr>
+      <tr><td>11</td><td>Acceptance Criteria Summary</td><td><span class="pill r">✗ Missing</span></td><td>Zero acceptance criteria on any requirement across the entire document</td></tr>
+      <tr><td>12</td><td>Risk Register</td><td><span class="pill r">✗ Missing</span></td><td>No risk register — critical given PDPA obligations and 250-store rollout</td></tr>
+      <tr><td>13</td><td>Dependencies &amp; Timeline / Milestones</td><td><span class="pill g">✓ Present</span></td><td>Section 4 header exists — but milestone content appears empty</td></tr>
+      <tr><td>14</td><td>Glossary</td><td><span class="pill g">✓ Present</span></td><td>Present but only 1 term defined — needs 15+ loyalty-specific terms</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SLIDE 2: CRITICAL GAPS -->
+<section class="slide" id="s2">
+  <div class="lbl" style="color:var(--red);">🔴 Critical Gaps — Block BRD Skill Compliance &amp; Gate 1</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#3a1020,var(--red));">🚨</div>
+    <h2>5 Critical Gaps — Must Fix Before Gate 1 Sign-Off</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;flex:1;overflow:auto;">
+    <div class="gap-row cr">
+      <div class="num" style="background:var(--red);">1</div>
+      <div style="flex:1;">
+        <p style="font-size:11px;font-weight:800;color:var(--red);">Zero Acceptance Criteria on ALL ~80 Functional Requirements</p>
+        <p class="sm">The Skill mandates: "Every FR must have at least 1 acceptance criterion." The RWS BRD has 0 AC across all 16 functional sections. Without AC, UAT sign-off and go-live gate authorisation have no objective basis.</p>
+        <div style="margin-top:4px;background:rgba(0,0,0,.25);border-radius:5px;padding:5px 9px;"><p style="font-size:9.5px;color:var(--green);">✅ Example fix — FR 9.1.5.01: AC1: Profile created in SessionM within 2s of API call · AC2: All mandatory custom attributes from §9.1.5.1 populated · AC3: Duplicate email returns 409 Conflict</p></div>
+      </div>
+    </div>
+    <div class="gap-row cr">
+      <div class="num" style="background:var(--red);">2</div>
+      <div style="flex:1;">
+        <p style="font-size:11px;font-weight:800;color:var(--red);">Non-Functional Requirements — Only 2, No Measurable Targets, Blank Systems &amp; Rating</p>
+        <p class="sm">Skill requires NFRs with numeric measurable targets. For 250 stores processing real-time loyalty transactions, this is a critical omission. Missing NFRs include performance, availability, DR, PDPA, and security.</p>
+        <div style="margin-top:4px;background:rgba(0,0,0,.25);border-radius:5px;padding:5px 9px;"><p style="font-size:9.5px;color:var(--green);">✅ Minimum needed: API response ≤500ms p95 · Availability ≥99.9% · PDPA Singapore consent · DR: RTO ≤4h RPO ≤1h · Scalability: 10x member growth</p></div>
+      </div>
+    </div>
+    <div class="gap-row cr">
+      <div class="num" style="background:var(--red);">3</div>
+      <div style="flex:1;">
+        <p style="font-size:11px;font-weight:800;color:var(--red);">No Priority Tags on Any FR (Must Have / Should Have / Nice to Have)</p>
+        <p class="sm">None of the ~80 FRs carry a priority. The Skill requires this on every requirement. Without priority data, the Jira export cannot assign High/Medium/Low to stories, and sprint planning has no prioritisation basis.</p>
+      </div>
+    </div>
+    <div class="gap-row cr">
+      <div class="num" style="background:var(--red);">4</div>
+      <div style="flex:1;">
+        <p style="font-size:11px;font-weight:800;color:var(--red);">No System Architecture Overview Section</p>
+        <p class="sm">Skill Section 8 is entirely absent. No component diagram or description of how SessionM, RWS Middleware, Member App, Merchant App, Microsoft Entra, and AWS S3 Data Cloud connect. The Solution Architect cannot produce the SDD without this foundation.</p>
+        <div style="margin-top:4px;background:rgba(0,0,0,.25);border-radius:5px;padding:5px 9px;"><p style="font-size:9.5px;color:var(--green);">✅ Minimum needed: System component list · Data flow directions · API integration points (sync/async) · Auth flow (Entra → SessionM) · Merchant App → Middleware → SessionM pathway</p></div>
+      </div>
+    </div>
+    <div class="gap-row cr">
+      <div class="num" style="background:var(--red);">5</div>
+      <div style="flex:1;">
+        <p style="font-size:11px;font-weight:800;color:var(--red);">No Risk Register</p>
+        <p class="sm">Skill Section 12 is entirely absent. For an MVP loyalty launch across 250 stores with PDPA PII implications (car plates, IU numbers, mobile numbers), this is a Gate 1 blocker. Key undocumented risks: PDPA non-compliance, merchant onboarding delays, SessionM API reliability, campaign misconfiguration, and member data accuracy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: WARNINGS -->
+<section class="slide" id="s3">
+  <div class="lbl" style="color:var(--orange);">⚠ Warnings &amp; Improvements</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a1800,var(--orange));">⚠️</div>
+    <h2>Warnings &amp; Nice-to-Have Improvements</h2>
+  </div>
+  <div class="g2" style="flex:1;gap:10px;overflow:auto;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="gap-row wa">
+        <div class="num" style="background:var(--orange);">W1</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--orange);">No User Personas</p><p class="sm">Stakeholders are listed but the Skill requires actual end-user personas. Missing: Tourist/Visitor, RWS Regular Guest, RWS Employee (TM), and Merchant Staff — each needs goals, pain points, and key interactions with the loyalty program.</p></div>
+      </div>
+      <div class="gap-row wa">
+        <div class="num" style="background:var(--orange);">W2</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--orange);">Business Requirements Not Structured as BR-XXX</p><p class="sm">The 5 objectives in §5 are business goals but not formatted as BR-XXX with priority and rationale. Conversion needed: e.g. BR-001 Customer Retention · Must Have · Rationale: reduce churn by 15%.</p></div>
+      </div>
+      <div class="gap-row wa">
+        <div class="num" style="background:var(--orange);">W3</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--orange);">No User Journey / Process Flows</p><p class="sm">Skill §10 requires step-by-step flows with happy path + error paths. All absent: Member Registration, Points Earn (Merchant App → SessionM), Points Redemption, Tier upgrade/downgrade, Offer issuance and redemption via voucher management system.</p></div>
+      </div>
+      <div class="gap-row wa">
+        <div class="num" style="background:var(--orange);">W4</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--orange);">No Phase Tagging on Any Requirement</p><p class="sm">BRD acknowledges MVP phasing in assumptions but no individual FR carries a Phase 1/2/3 tag. This makes sprint backlog prioritisation unreliable and the Jira export cannot set Fix Version/Sprint correctly.</p></div>
+      </div>
+      <div class="gap-row wa">
+        <div class="num" style="background:var(--orange);">W5</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--orange);">Milestones Section (§4) is Empty</p><p class="sm">Header present but no content. Needs: milestone table with target dates, phase criteria, and gate conditions (Gate 1, UAT start, go-live).</p></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="gap-row ni">
+        <div class="num" style="background:var(--yellow);color:#000;">N1</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--yellow);">Glossary Has Only 1 Term</p><p class="sm">Needs: xplore Dollar · Tier Qualification · Tier Maintenance · RLP_ID · RLP_NO · IU Number · Track Tier C · Wander/Discover/Journey/Pinnacle · NG Dollar · TM · NGLP · MVP · 3P · SMP</p></div>
+      </div>
+      <div class="gap-row ni">
+        <div class="num" style="background:var(--yellow);color:#000;">N2</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--yellow);">FR Numbering Mismatch</p><p class="sm">Section 9.1.2 (Data Ingestion) uses requirement numbers 9.1.3.xx. This creates traceability errors across the BRD and will cause issues in the Jira ticket linking. All req numbers must align to their section numbers.</p></div>
+      </div>
+      <div class="gap-row ni">
+        <div class="num" style="background:var(--yellow);color:#000;">N3</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--yellow);">No PDPA Singapore Compliance Requirement</p><p class="sm">The program collects significant PII: name, email, mobile, car plate, IU number. Singapore's PDPA obligations — consent collection, data access rights, right to deletion, and breach notification — are entirely absent from the BRD.</p></div>
+      </div>
+      <div class="gap-row ni">
+        <div class="num" style="background:var(--yellow);color:#000;">N4</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--yellow);">No Executive Summary Section</p><p class="sm">Skill requires a structured 3–5 sentence exec summary with business problem, proposed solution, and quantified success metrics (target member count, retention rate improvement, revenue uplift target).</p></div>
+      </div>
+      <div class="gap-row ni">
+        <div class="num" style="background:var(--yellow);color:#000;">N5</div>
+        <div><p style="font-size:10.5px;font-weight:700;color:var(--yellow);">NFR Rating &amp; Systems Columns Blank</p><p class="sm">Both existing NFR rows have empty System and Rating columns. Quick fix: Rating = Must Have, Systems = SessionM. Then add the 5+ missing NFRs with measurable targets.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: STRENGTHS -->
+<section class="slide" id="s4">
+  <div class="lbl" style="color:var(--green);">✅ Strengths — What the BRD Does Well</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#0a2a18,var(--green));">✅</div>
+    <h2>What the RWS BRD Does Well — Strengths vs Skill Standard</h2>
+  </div>
+  <div class="g3" style="flex:1;gap:8px;overflow:auto;">
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">📋 Document Control</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>Full revision history V1.0 → V1.3</li><li>Share history per version tracked</li>
+          <li>3 approvers with dates &amp; signatures</li><li>Change reason per version recorded</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">🏆 Tier Program Logic (Best in BRD)</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>5-tier structure fully mapped (§9.1.6.1)</li><li>Entrance/Purchase/Event/Maintenance rules per tier</li>
+          <li>TM program separately defined (§9.1.6.2)</li><li>Soft landing logic for Tier C documented</li>
+          <li>All events named (JOINED_TIER_x etc.)</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">🗄️ Data Model</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>Custom profile attributes fully listed (§9.1.5.1)</li><li>Point expiry org model defined (§9.1.5.2)</li>
+          <li>4 point accounts with expiry policies</li><li>Point source → account relationships mapped</li>
+          <li>Singapore-specific fields (IU no., car plate)</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">🎯 Campaign Engine Coverage</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>22 campaign FRs covering all promotion types</li><li>Spend, frequency, consecutive, time-of-day rules</li>
+          <li>Campaign approval workflow (9.1.8.22)</li><li>Audit trail for changes (9.1.8.21)</li>
+          <li>Offer issuance restrictions fully detailed</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">📦 Scope Clarity</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>Out-of-scope explicitly listed (3 items)</li><li>5 assumptions clearly stated</li>
+          <li>Gaming vs non-gaming separation noted</li><li>MVP phasing acknowledged</li>
+          <li>Merchant app interaction model noted</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">🔔 Messaging Triggers (10)</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>Real-time + scheduled messaging</li><li>Tier upgrade/demotion/maintenance</li>
+          <li>Points earn &amp; campaign completion</li><li>Registration welcome</li>
+          <li>New campaign availability notification</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">📈 Insights (30 Reports)</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>Member, transaction, tier reporting</li><li>Spend, offers, campaign analytics</li>
+          <li>Store-level and payment-type reports</li><li>Data Cloud / S3 export requirements</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:9px 12px;">
+        <h3 style="color:var(--green);margin-bottom:5px;">👥 Stakeholder Register</h3>
+        <ul class="ck" style="font-size:10px;">
+          <li>5 named stakeholders with emails</li><li>Roles: IT Head, Loyalty Head, BA, SA, Deloitte BA</li>
+          <li>Clear company assignment (RWS vs Deloitte)</li>
+        </ul>
+      </div>
+      <div class="card bl" style="padding:9px 12px;">
+        <h3 style="color:var(--blue);margin-bottom:5px;">🏆 Overall Assessment</h3>
+        <p class="sm" style="font-size:10px;">Strong on <strong style="color:var(--orange);">loyalty domain logic</strong> — tier design, campaign engine, and data model are genuinely well-documented. Reads more like a <strong style="color:var(--yellow);">platform config spec</strong> than a full BRD. Resolving the 5 critical gaps and completing v2.0 makes this Gate 1 ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5: REMEDIATION PLAN -->
+<section class="slide" id="s5">
+  <div class="lbl" style="color:var(--blue);">🛠 Remediation Plan</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#0a1a2a,var(--blue));">🛠️</div>
+    <h2>Remediation Plan — Actions to Reach v2.0 Gate 1 Ready</h2>
+  </div>
+  <div class="g2" style="flex:1;gap:10px;overflow:auto;">
+    <div>
+      <table style="font-size:10px;">
+        <thead><tr><th style="width:70px;">Priority</th><th>Action Required</th><th style="width:75px;">Owner</th><th style="width:55px;">Effort</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--red-bg);"><td><span class="pill r">CRITICAL</span></td><td>Add Acceptance Criteria to every FR (min 1 per FR)</td><td>Macks Chan</td><td>3–4 days</td></tr>
+          <tr style="background:var(--red-bg);"><td><span class="pill r">CRITICAL</span></td><td>Add Priority column (Must Have / Should Have / Nice to Have) to all FRs</td><td>Macks Chan</td><td>1 day</td></tr>
+          <tr style="background:var(--red-bg);"><td><span class="pill r">CRITICAL</span></td><td>Expand NFRs with measurable targets: Performance, Availability, PDPA, DR, Security</td><td>Darmadi (SA)</td><td>1 day</td></tr>
+          <tr style="background:var(--red-bg);"><td><span class="pill r">CRITICAL</span></td><td>Add System Architecture section — component diagram, integration flows, auth model</td><td>Darmadi (SA)</td><td>2 days</td></tr>
+          <tr style="background:var(--red-bg);"><td><span class="pill r">CRITICAL</span></td><td>Add Risk Register with risks, likelihood, impact, mitigation, and owners</td><td>Macks Chan / PM</td><td>1 day</td></tr>
+          <tr style="background:var(--orange-bg);"><td><span class="pill o">HIGH</span></td><td>Add User Personas (Tourist, Regular Guest, Employee TM, Merchant Staff)</td><td>Macks Chan</td><td>1 day</td></tr>
+          <tr style="background:var(--orange-bg);"><td><span class="pill o">HIGH</span></td><td>Restructure Objectives as BR-XXX with priority and rationale</td><td>Macks Chan</td><td>0.5 days</td></tr>
+          <tr style="background:var(--orange-bg);"><td><span class="pill o">HIGH</span></td><td>Add User Journey flows: Registration, Earn, Redeem, Tier Up/Down, Offer issuance</td><td>Macks Chan / BA</td><td>2 days</td></tr>
+          <tr style="background:var(--orange-bg);"><td><span class="pill o">HIGH</span></td><td>Add Phase 1 / Phase 2 tags on every FR</td><td>Macks Chan</td><td>0.5 days</td></tr>
+          <tr style="background:var(--orange-bg);"><td><span class="pill o">HIGH</span></td><td>Complete Milestones section (§4) with dates and gate criteria</td><td>Andreas Looi</td><td>0.5 days</td></tr>
+          <tr style="background:var(--yellow-bg);"><td><span class="pill y">MEDIUM</span></td><td>Expand Glossary — add 15+ loyalty-specific terms</td><td>Any</td><td>0.5 days</td></tr>
+          <tr style="background:var(--yellow-bg);"><td><span class="pill y">MEDIUM</span></td><td>Fix FR numbering mismatch (§9.1.2 data ingestion uses 9.1.3.xx numbers)</td><td>Macks Chan</td><td>0.5 days</td></tr>
+          <tr style="background:var(--yellow-bg);"><td><span class="pill y">MEDIUM</span></td><td>Add PDPA Singapore compliance FR and reference in assumptions &amp; NFRs</td><td>Macks Chan / Legal</td><td>0.5 days</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card bl" style="padding:10px 13px;">
+        <h3 style="color:var(--blue);margin-bottom:7px;">📅 Version Roadmap to Gate 1</h3>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:10.5px;">
+          <div style="background:var(--card2);border-radius:5px;padding:5px 9px;display:flex;justify-content:space-between;"><span><span style="color:var(--orange);font-weight:700;">Current v1.3</span> — FRs documented, structural gaps</span><span class="pill o">61%</span></div>
+          <div style="background:var(--card2);border-radius:5px;padding:5px 9px;display:flex;justify-content:space-between;"><span><span style="color:var(--yellow);font-weight:700;">v1.4</span> (~1 wk) — Priority tags, phase tags, BR-XXX, architecture, NFRs</span><span class="pill y">~75%</span></div>
+          <div style="background:var(--card2);border-radius:5px;padding:5px 9px;display:flex;justify-content:space-between;"><span><span style="color:var(--teal);font-weight:700;">v1.5</span> (~2 wks) — AC on all FRs, user journeys, personas, risk register</span><span class="pill g">~88%</span></div>
+          <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:5px;padding:5px 9px;display:flex;justify-content:space-between;"><span><span style="color:var(--green);font-weight:800;">v2.0</span> — Gate 1 Ready · Sponsor sign-off · Full Skill compliance</span><span class="pill g">90%+</span></div>
+        </div>
+      </div>
+      <div class="card" style="padding:10px 13px;">
+        <h3 style="color:var(--muted);margin-bottom:7px;">📊 Compliance Score by Category</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th>Category</th><th style="width:95px;">Score</th></tr></thead>
+          <tbody>
+            <tr><td>Document Structure (14 sections)</td><td><span class="pill o">⚠ 64%</span></td></tr>
+            <tr><td>FR Quality (priority + acceptance criteria)</td><td><span class="pill r">✗ 0%</span></td></tr>
+            <tr><td>NFR Quality (measurable targets)</td><td><span class="pill r">✗ 10%</span></td></tr>
+            <tr><td>Loyalty Domain Coverage</td><td><span class="pill g">✓ 90%</span></td></tr>
+            <tr><td>Data Requirements</td><td><span class="pill g">✓ 85%</span></td></tr>
+            <tr><td>Stakeholder Coverage</td><td><span class="pill o">⚠ 50%</span></td></tr>
+            <tr><td>Risk &amp; Compliance</td><td><span class="pill r">✗ 0%</span></td></tr>
+            <tr><td><strong>Overall BRD Skill Compliance</strong></td><td><span class="pill o">⚠ 61%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card yw" style="padding:9px 12px;">
+        <h3 style="color:var(--yellow);margin-bottom:5px;">⚡ Quick Wins — Do Today</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Add Priority column to all 16 FR sections</li>
+          <li>Add Phase 1 tag on all MVP FRs</li>
+          <li>Fill Glossary with 15+ terms</li>
+          <li>Fix req number mismatch (§9.1.2 → 9.1.3.xx)</li>
+          <li>Fill NFR Rating + System columns</li>
+          <li>Complete the empty Milestones section</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+<div id="dots" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:200;"></div>
+<div class="nav">
+  <button onclick="go(-1)">← Prev</button>
+  <span class="counter" id="counter">1 / 1</span>
+  <button onclick="go(1)">Next →</button>
+</div>
+<div class="progress-bar" id="bar"></div>
+<script>
+const slides=document.querySelectorAll('.slide');
+const dotsEl=document.getElementById('dots');
+let cur=0;
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot'+(i===0?' on':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);});
+function sync(){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===cur));document.getElementById('counter').textContent=(cur+1)+' / '+slides.length;document.getElementById('bar').style.width=((cur+1)/slides.length*100)+'%';}
+function goTo(n){slides[cur].classList.remove('active');slides[cur].classList.add('prev');cur=Math.max(0,Math.min(slides.length-1,n));slides[cur].classList.add('active');sync();setTimeout(()=>slides.forEach(s=>{if(!s.classList.contains('active'))s.classList.remove('prev');}),360);}
+function go(d){goTo(cur+d);}
+document.addEventListener('keydown',e=>{if(['ArrowRight','ArrowDown',' '].includes(e.key)){e.preventDefault();go(1);}if(['ArrowLeft','ArrowUp'].includes(e.key)){e.preventDefault();go(-1);}});
+sync();
+</script>
+</body>
+</html>
