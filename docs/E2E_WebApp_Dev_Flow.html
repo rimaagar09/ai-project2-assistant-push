@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>End-to-End Web & App Development Flow</title>
+<style>
+:root {
+  --bg:#0d1b2a; --card:#162433; --card2:#1a2d3e; --border:#2a4057; --border2:#1e3450;
+  --text:#e8edf2; --muted:#8fa3b8; --dim:#3a5570;
+  --pm:#00c6ff;    --pm-bg:rgba(0,198,255,.09);    --pm-dark:#1a3a5c;
+  --sol:#a855f7;   --sol-bg:rgba(168,85,247,.09);  --sol-dark:#2a1a3a;
+  --dev:#27ae60;   --dev-bg:rgba(39,174,96,.09);   --dev-dark:#1a2e20;
+  --exe:#f0b429;   --exe-bg:rgba(240,180,41,.09);  --exe-dark:#2a2000;
+  --red:#e74c3c;   --orange:#e67e22; --teal:#00b4a0; --pink:#ec4899;
+  --gate:#f0b429;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;width:100vw;}
+.deck{width:100vw;height:100vh;position:relative;}
+
+/* ── SLIDES ── */
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:22px 46px 58px;
+  opacity:0;pointer-events:none;overflow:hidden;
+  transition:opacity .3s ease,transform .3s ease;
+  transform:translateX(36px);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.prev{opacity:0;transform:translateX(-36px);}
+
+/* ── PILLAR COLOUR BAND (left edge) ── */
+.slide::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:0;}
+.slide.pm-slide::before{background:var(--pm);}
+.slide.sol-slide::before{background:var(--sol);}
+.slide.dev-slide::before{background:var(--dev);}
+.slide.exe-slide::before{background:var(--exe);}
+.slide.overview-slide::before{background:linear-gradient(180deg,var(--pm),var(--sol),var(--dev),var(--exe));}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:16px;right:28px;display:flex;gap:8px;z-index:200;align-items:center;}
+.nav button{background:var(--card);border:1px solid var(--border);color:var(--text);
+  padding:6px 17px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;}
+.nav button:hover{background:#1e3a5c;border-color:var(--pm);}
+.counter{color:var(--muted);font-size:11px;min-width:48px;text-align:center;}
+.progress-bar{position:fixed;bottom:0;left:0;height:3px;transition:width .3s ease;
+  background:linear-gradient(90deg,var(--pm),var(--sol),var(--dev),var(--exe));}
+.dots{position:fixed;bottom:17px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:200;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .2s;}
+.dot.on{transform:scale(1.5);}
+.dot.pm{background:var(--pm);}
+.dot.sol{background:var(--sol);}
+.dot.dev{background:var(--dev);}
+.dot.exe{background:var(--exe);}
+.dot.ov{background:var(--muted);}
+
+/* ── TYPOGRAPHY ── */
+.lbl{font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.lbl.pm{color:var(--pm);} .lbl.sol{color:var(--sol);} .lbl.dev{color:var(--dev);} .lbl.exe{color:var(--exe);}
+h2{font-size:21px;font-weight:800;line-height:1.2;}
+h3{font-size:11.5px;font-weight:700;}
+.sm{font-size:10.5px;color:var(--muted);line-height:1.55;}
+.mono{font-family:'Courier New',monospace;}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;gap:11px;margin-bottom:11px;}
+.icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,198,255,.08);
+  border:1px solid rgba(0,198,255,.2);border-radius:20px;padding:3px 12px;
+  font-size:10px;font-weight:700;color:var(--pm);}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 13px;}
+.card.pm{border-color:var(--pm);}   .card.sol{border-color:var(--sol);}
+.card.dev{border-color:var(--dev);} .card.exe{border-color:var(--exe);}
+.card.rd{border-color:var(--red);}  .card.or{border-color:var(--orange);}
+.card.tl{border-color:var(--teal);}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;}
+th{background:var(--pm-dark);color:var(--pm);padding:5px 9px;text-align:left;font-weight:600;font-size:10.5px;}
+th.sol{background:var(--sol-dark);color:var(--sol);}
+th.dev{background:var(--dev-dark);color:var(--dev);}
+th.exe{background:var(--exe-dark);color:var(--exe);}
+td{padding:4px 9px;border-bottom:1px solid var(--border);font-size:10.5px;}
+
+/* ── PILLS ── */
+.pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;}
+.pill.pm{background:var(--pm-bg);color:var(--pm);}
+.pill.sol{background:var(--sol-bg);color:var(--sol);}
+.pill.dev{background:var(--dev-bg);color:var(--dev);}
+.pill.exe{background:var(--exe-bg);color:var(--exe);}
+.pill.g{background:rgba(39,174,96,.2);color:var(--dev);}
+.pill.r{background:rgba(231,76,60,.2);color:var(--red);}
+.pill.o{background:rgba(230,126,34,.2);color:var(--orange);}
+.tag{display:inline-block;background:rgba(0,198,255,.1);color:var(--pm);border-radius:4px;padding:1px 6px;font-size:10px;margin:1px 2px;}
+
+/* ── CHECKLIST ── */
+ul.ck{margin:0;padding:0;}
+ul.ck li{list-style:none;padding-left:15px;position:relative;margin-bottom:3px;font-size:10.5px;}
+ul.ck li::before{content:'✓';position:absolute;left:0;color:var(--dev);font-weight:700;}
+ul.ck li.w::before{content:'⚠';color:var(--exe);}
+ul.ck li.x::before{content:'✗';color:var(--red);}
+
+/* ── GATE BOX ── */
+.gate{background:rgba(240,180,41,.07);border:1.5px solid var(--gate);border-radius:9px;padding:9px 13px;}
+
+/* ── PILLAR PILL HEADER ── */
+.pillar-tag{display:inline-flex;align-items:center;gap:6px;border-radius:6px;padding:3px 10px;font-size:10px;font-weight:800;letter-spacing:.5px;margin-bottom:6px;}
+.pillar-tag.pm{background:var(--pm-bg);color:var(--pm);border:1px solid rgba(0,198,255,.3);}
+.pillar-tag.sol{background:var(--sol-bg);color:var(--sol);border:1px solid rgba(168,85,247,.3);}
+.pillar-tag.dev{background:var(--dev-bg);color:var(--dev);border:1px solid rgba(39,174,96,.3);}
+.pillar-tag.exe{background:var(--exe-bg);color:var(--exe);border:1px solid rgba(240,180,41,.3);}
+
+/* ── PHASE STRIP ── */
+.phase-strip{display:flex;border-radius:7px;overflow:hidden;margin-bottom:10px;border:1px solid var(--border);}
+.ps{flex:1;padding:5px 4px;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:.3px;cursor:pointer;border-right:1px solid var(--border);transition:all .2s;}
+.ps:last-child{border-right:none;}
+.ps.pm{background:var(--pm-bg);color:var(--pm);}
+.ps.sol{background:var(--sol-bg);color:var(--sol);}
+.ps.dev{background:var(--dev-bg);color:var(--dev);}
+.ps.exe{background:var(--exe-bg);color:var(--exe);}
+.ps.dim{background:transparent;color:var(--muted);}
+
+/* ── STEP NUMBER ── */
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;flex-shrink:0;}
+
+/* ── SEP ── */
+.sep{height:1px;background:var(--border);margin:7px 0;}
+
+/* ── FLOW CONNECTOR ── */
+.flow-row{display:flex;align-items:center;gap:0;}
+.flow-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;}
+.flow-arrow{color:var(--muted);font-size:16px;flex-shrink:0;padding:0 4px;}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 1 — MASTER OVERVIEW
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide active overview-slide" id="s1">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div class="lbl" style="margin-bottom:0;">Web &amp; App Development · Complete Lifecycle · AI-Powered</div>
+    <div class="badge">🤖 Powered by Claude</div>
+  </div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1e5799,#00c6ff);">🌐</div>
+    <h2>End-to-End Web &amp; App Development Flow — 4 Pillars · Gate-Controlled · Jira-Ready</h2>
+  </div>
+
+  <!-- Master pipeline SVG -->
+  <svg viewBox="0 0 980 210" style="width:100%;max-height:200px;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ma" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#00c6ff"/></marker>
+      <marker id="ms" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#a855f7"/></marker>
+      <marker id="md" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#27ae60"/></marker>
+      <marker id="me" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#f0b429"/></marker>
+      <marker id="mg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#8fa3b8"/></marker>
+    </defs>
+
+    <!-- INPUT BOX -->
+    <rect x="2" y="75" width="72" height="58" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.2"/>
+    <text x="38" y="97" text-anchor="middle" fill="#8fa3b8" font-size="11">📥</text>
+    <text x="38" y="111" text-anchor="middle" fill="#e8edf2" font-size="8.5" font-weight="600" font-family="Segoe UI,sans-serif">SOW / Req</text>
+    <text x="38" y="123" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">CR / Brief</text>
+    <line x1="74" y1="104" x2="90" y2="104" stroke="#8fa3b8" stroke-width="1.5" marker-end="url(#mg)"/>
+
+    <!-- PM PILLAR -->
+    <rect x="92" y="20" width="162" height="168" rx="9" fill="#1a3a5c" stroke="#00c6ff" stroke-width="2"/>
+    <text x="173" y="40" text-anchor="middle" fill="#00c6ff" font-size="9" font-weight="800" font-family="Segoe UI,sans-serif" letter-spacing="1.5">01 · PM</text>
+    <line x1="104" y1="48" x2="242" y2="48" stroke="#1e3a5c" stroke-width="0.8"/>
+    <text x="104" y="62" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Intake &amp; BRD (19 sections)</text>
+    <text x="104" y="76" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ 30 structured Q&amp;A</text>
+    <text x="104" y="90" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ 7 Guardrail checks</text>
+    <text x="104" y="104" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Discovery dashboard</text>
+    <text x="104" y="118" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Jira Epics &amp; Stories</text>
+    <text x="104" y="132" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Sprint plan export</text>
+    <rect x="104" y="145" width="136" height="32" rx="6" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="1"/>
+    <text x="172" y="159" text-anchor="middle" fill="#f0b429" font-size="8" font-weight="700" font-family="Segoe UI,sans-serif">👤 GATE 1: BRD Sign-Off</text>
+    <text x="172" y="171" text-anchor="middle" fill="#8fa3b8" font-size="7.5" font-family="Segoe UI,sans-serif">Sponsor approved · Guardrails clear</text>
+    <line x1="254" y1="104" x2="272" y2="104" stroke="#00c6ff" stroke-width="1.5" marker-end="url(#ma)"/>
+
+    <!-- SOL PILLAR -->
+    <rect x="274" y="20" width="162" height="168" rx="9" fill="#2a1a3a" stroke="#a855f7" stroke-width="2"/>
+    <text x="355" y="40" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="800" font-family="Segoe UI,sans-serif" letter-spacing="1.5">02 · SOLUTION</text>
+    <line x1="286" y1="48" x2="424" y2="48" stroke="#2a1a3a" stroke-width="0.8"/>
+    <text x="286" y="62" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ SDD — 27-section design doc</text>
+    <text x="286" y="76" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Architecture decisions (ADRs)</text>
+    <text x="286" y="90" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ API &amp; data model design</text>
+    <text x="286" y="104" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Tech stack &amp; infra selection</text>
+    <text x="286" y="118" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ LLD — component diagrams</text>
+    <text x="286" y="132" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Security &amp; compliance review</text>
+    <rect x="286" y="145" width="136" height="32" rx="6" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="1"/>
+    <text x="354" y="159" text-anchor="middle" fill="#f0b429" font-size="8" font-weight="700" font-family="Segoe UI,sans-serif">👤 GATE 2: SDD Sign-Off</text>
+    <text x="354" y="171" text-anchor="middle" fill="#8fa3b8" font-size="7.5" font-family="Segoe UI,sans-serif">Arch approved · Dev-ready</text>
+    <line x1="436" y1="104" x2="454" y2="104" stroke="#a855f7" stroke-width="1.5" marker-end="url(#ms)"/>
+
+    <!-- DEV PILLAR -->
+    <rect x="456" y="20" width="162" height="168" rx="9" fill="#1a2e20" stroke="#27ae60" stroke-width="2"/>
+    <text x="537" y="40" text-anchor="middle" fill="#27ae60" font-size="9" font-weight="800" font-family="Segoe UI,sans-serif" letter-spacing="1.5">03 · DEVELOPMENT</text>
+    <line x1="468" y1="48" x2="606" y2="48" stroke="#1a2e20" stroke-width="0.8"/>
+    <text x="468" y="62" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Environment setup &amp; CI/CD</text>
+    <text x="468" y="76" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Sprint-based feature build</text>
+    <text x="468" y="90" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Code review &amp; PR gates</text>
+    <text x="468" y="104" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Unit &amp; integration tests</text>
+    <text x="468" y="118" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ API integration &amp; mocking</text>
+    <text x="468" y="132" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Staging deployment</text>
+    <rect x="468" y="145" width="136" height="32" rx="6" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="1"/>
+    <text x="536" y="159" text-anchor="middle" fill="#f0b429" font-size="8" font-weight="700" font-family="Segoe UI,sans-serif">👤 GATE 3: Dev Complete</text>
+    <text x="536" y="171" text-anchor="middle" fill="#8fa3b8" font-size="7.5" font-family="Segoe UI,sans-serif">All stories done · Staging green</text>
+    <line x1="618" y1="104" x2="636" y2="104" stroke="#27ae60" stroke-width="1.5" marker-end="url(#md)"/>
+
+    <!-- EXE PILLAR -->
+    <rect x="638" y="20" width="162" height="168" rx="9" fill="#2a2000" stroke="#f0b429" stroke-width="2"/>
+    <text x="719" y="40" text-anchor="middle" fill="#f0b429" font-size="9" font-weight="800" font-family="Segoe UI,sans-serif" letter-spacing="1.5">04 · EXECUTION</text>
+    <line x1="650" y1="48" x2="788" y2="48" stroke="#2a2000" stroke-width="0.8"/>
+    <text x="650" y="62" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ QA &amp; test case execution</text>
+    <text x="650" y="76" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ UAT with stakeholders</text>
+    <text x="650" y="90" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Defect triage &amp; resolution</text>
+    <text x="650" y="104" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Performance &amp; security test</text>
+    <text x="650" y="118" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Go-live deployment</text>
+    <text x="650" y="132" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">→ Hypercare &amp; handover</text>
+    <rect x="650" y="145" width="136" height="32" rx="6" fill="rgba(240,180,41,.1)" stroke="#f0b429" stroke-width="1"/>
+    <text x="718" y="159" text-anchor="middle" fill="#f0b429" font-size="8" font-weight="700" font-family="Segoe UI,sans-serif">👤 GATE 4: Go-Live</text>
+    <text x="718" y="171" text-anchor="middle" fill="#8fa3b8" font-size="7.5" font-family="Segoe UI,sans-serif">UAT passed · QA sign-off · Live</text>
+    <line x1="800" y1="104" x2="820" y2="104" stroke="#f0b429" stroke-width="1.5" marker-end="url(#me)"/>
+
+    <!-- OUTPUT -->
+    <rect x="822" y="75" width="78" height="58" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.2"/>
+    <text x="861" y="95" text-anchor="middle" fill="#f0b429" font-size="13">🚀</text>
+    <text x="861" y="109" text-anchor="middle" fill="#e8edf2" font-size="8.5" font-weight="700" font-family="Segoe UI,sans-serif">LIVE</text>
+    <text x="861" y="121" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">Product</text>
+
+    <!-- repo bar below -->
+    <rect x="92" y="196" width="720" height="14" rx="4" fill="rgba(0,180,160,.1)" stroke="#00b4a0" stroke-width="0.8"/>
+    <text x="452" y="207" text-anchor="middle" fill="#00b4a0" font-size="8" font-weight="700" font-family="Segoe UI,sans-serif">📁 Confluence Repository — BRD · SDD · Sprint Backlog · Test Reports · ADRs · Runbooks — lives across all pillars</text>
+  </svg>
+
+  <!-- 4 pillar stat row -->
+  <div class="g4" style="margin-top:8px;gap:9px;">
+    <div class="card pm" style="padding:9px 12px;">
+      <div style="font-size:11px;font-weight:800;color:var(--pm);margin-bottom:5px;">01 · PM</div>
+      <div class="sm">BRD · 7 Guardrails · Discovery · Jira Backlog</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+        <span class="tag">BRD</span><span class="tag">Guardrails</span><span class="tag">Jira</span>
+      </div>
+    </div>
+    <div class="card sol" style="padding:9px 12px;">
+      <div style="font-size:11px;font-weight:800;color:var(--sol);margin-bottom:5px;">02 · Solution Design</div>
+      <div class="sm">SDD · ADRs · API contracts · Architecture</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+        <span style="background:var(--sol-bg);color:var(--sol);" class="tag">SDD</span>
+        <span style="background:var(--sol-bg);color:var(--sol);" class="tag">ADR</span>
+        <span style="background:var(--sol-bg);color:var(--sol);" class="tag">LLD</span>
+      </div>
+    </div>
+    <div class="card dev" style="padding:9px 12px;">
+      <div style="font-size:11px;font-weight:800;color:var(--dev);margin-bottom:5px;">03 · Development</div>
+      <div class="sm">Sprints · CI/CD · Code review · Staging</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+        <span style="background:var(--dev-bg);color:var(--dev);" class="tag">CI/CD</span>
+        <span style="background:var(--dev-bg);color:var(--dev);" class="tag">Sprints</span>
+        <span style="background:var(--dev-bg);color:var(--dev);" class="tag">PRs</span>
+      </div>
+    </div>
+    <div class="card exe" style="padding:9px 12px;">
+      <div style="font-size:11px;font-weight:800;color:var(--exe);margin-bottom:5px;">04 · Execution</div>
+      <div class="sm">QA · UAT · Go-live · Hypercare</div>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">
+        <span style="background:var(--exe-bg);color:var(--exe);" class="tag">QA</span>
+        <span style="background:var(--exe-bg);color:var(--exe);" class="tag">UAT</span>
+        <span style="background:var(--exe-bg);color:var(--exe);" class="tag">Go-Live</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="gate" style="margin-top:9px;">
+    <span style="font-size:10px;font-weight:700;color:var(--gate);">👤 Human-in-the-loop at every gate —</span>
+    <span class="sm"> Nothing auto-advances. Gate 1 = BRD sign-off · Gate 2 = SDD approved · Gate 3 = Dev complete · Gate 4 = UAT passed &amp; go-live authorised.</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 2 — PILLAR 01: PM — INTAKE & BRD
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide pm-slide" id="s2">
+  <div class="pillar-tag pm">01 · PM PILLAR</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1e5799,#00c6ff);">📋</div>
+    <h2>Intake &amp; BRD Creation — Structured Q&amp;A · 19 Sections · AI-Powered Agent</h2>
+  </div>
+  <div class="phase-strip">
+    <div class="ps pm">Intake</div><div class="ps pm">BRD</div><div class="ps pm">Guardrails</div>
+    <div class="ps pm">Discovery</div><div class="ps pm">Jira</div>
+    <div class="ps dim">→ Gate 1</div><div class="ps dim">Sol ▸</div><div class="ps dim">Dev ▸</div><div class="ps dim">Exe ▸</div>
+  </div>
+
+  <div class="g2" style="flex:1;gap:11px;">
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card pm" style="padding:9px 12px;">
+        <h3 style="color:var(--pm);margin-bottom:6px;">📥 Step 1 — Input Classification</h3>
+        <div class="g2" style="gap:6px;">
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;"><span style="font-size:10px;font-weight:700;color:var(--pm);">📑 SOW</span><p class="sm" style="margin-top:2px;">Extracts scope, timeline, commercials, exclusions</p></div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;"><span style="font-size:10px;font-weight:700;color:var(--pm);">📋 New Requirement</span><p class="sm" style="margin-top:2px;">Business problem, personas, modules, success criteria</p></div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;"><span style="font-size:10px;font-weight:700;color:var(--pm);">🔄 Change Request</span><p class="sm" style="margin-top:2px;">Delta scope, impacted sections, risk to timeline</p></div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;"><span style="font-size:10px;font-weight:700;color:var(--pm);">💡 Product Brief</span><p class="sm" style="margin-top:2px;">Feature spec, user flows, tech dependencies</p></div>
+        </div>
+      </div>
+
+      <div class="card pm" style="padding:9px 12px;">
+        <h3 style="color:var(--pm);margin-bottom:6px;">📝 BRD — 19 Universal Sections</h3>
+        <div class="g2" style="gap:4px;font-size:10px;">
+          <div>
+            <p style="color:var(--muted);margin-bottom:2px;">Core Sections</p>
+            <ul class="ck">
+              <li>01 Document Control</li><li>02 Executive Summary</li>
+              <li>03 Business Objectives</li><li>04 As-Is / Current State</li>
+              <li>05 Proposed Solution (To-Be)</li><li>06 Scope Definition</li>
+              <li>07 Functional Requirements (FR-xxx)</li><li>08 Non-Functional Requirements</li>
+              <li>09 Integration Requirements</li><li>10 User Journeys / Process Flows</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--muted);margin-bottom:2px;">Quality Sections</p>
+            <ul class="ck">
+              <li>11 Implementation Phases</li><li>12 Timeline &amp; Milestones</li>
+              <li>13 Risk Register</li>
+              <li style="color:var(--exe);">14 E2E Journey Flow Diagram 📊</li>
+              <li>15 KPIs &amp; Success Metrics</li><li>16 Acceptance Criteria</li>
+              <li>17 Commercial Considerations</li><li>18 Clarification Register</li>
+              <li>19 Appendix</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--pm);margin-bottom:6px;">🛡️ 7 Guardrail Categories — Auto-check after every BRD</h3>
+        <table style="font-size:10px;">
+          <tr><td style="color:var(--red);font-weight:700;width:28px;">G1</td><td style="color:var(--red);">Scope Boundaries</td><td class="sm">In/out-of-scope, phase tags, freeze date, no open TBDs</td></tr>
+          <tr><td style="color:var(--orange);font-weight:700;">G2</td><td style="color:var(--orange);">Financial Guardrails</td><td class="sm">Budget, contingency 10–15%, overrun threshold</td></tr>
+          <tr><td style="color:var(--exe);font-weight:700;">G3</td><td style="color:var(--exe);">Compliance &amp; Regulatory</td><td class="sm">GDPR/PDPA/PCI, consent flows, PII tagging</td></tr>
+          <tr><td style="color:var(--dev);font-weight:700;">G4</td><td style="color:var(--dev);">SMART KPIs</td><td class="sm">≥5 KPIs per module, numeric targets, baselines</td></tr>
+          <tr><td style="color:var(--pm);font-weight:700;">G5</td><td style="color:var(--pm);">Business Constraints</td><td class="sm">Legacy deps, hard deadlines, cutover strategy</td></tr>
+          <tr><td style="color:var(--sol);font-weight:700;">G6</td><td style="color:var(--sol);">Resource &amp; Roles</td><td class="sm">RACI, decision authority, sign-off owners</td></tr>
+          <tr><td style="color:var(--teal);font-weight:700;">G7</td><td style="color:var(--teal);">Test Case Execution</td><td class="sm">FR→TC traceability, 100% coverage, UAT sign-off</td></tr>
+        </table>
+        <div style="margin-top:6px;background:rgba(0,0,0,.2);border-radius:6px;padding:6px 9px;" class="mono">
+          <p style="font-size:9.5px;color:var(--red);">[G3-001] 🔴 CRITICAL — GDPR not assessed → Owner: [PM] · OPEN</p>
+          <p style="font-size:9.5px;color:var(--exe);">[G7-001] 🟡 RISK — FR-003 no test case → Owner: [QA] · OPEN</p>
+          <p style="font-size:9.5px;color:var(--dev);margin-top:3px;">✅ G1 ✅ G2 ❌ G3 ✅ G4 ✅ G5 ✅ G6 ❌ G7</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--pm);margin-bottom:6px;">🔍 Discovery Dashboard → Jira Output</h3>
+        <div class="g2" style="gap:6px;">
+          <div>
+            <p style="font-size:9.5px;font-weight:700;color:var(--muted);margin-bottom:4px;">5 Discovery Tabs</p>
+            <ul class="ck" style="font-size:10px;">
+              <li>Structured Q&amp;A (BRD pre-filled)</li>
+              <li>Solution &amp; Module mapping</li>
+              <li>Yes/No Quick Confirm (~50 items)</li>
+              <li>BRD Coverage heatmap</li>
+              <li>Guardrail live status panel</li>
+            </ul>
+          </div>
+          <div>
+            <p style="font-size:9.5px;font-weight:700;color:var(--muted);margin-bottom:4px;">Jira Output</p>
+            <ul class="ck" style="font-size:10px;">
+              <li>Epics per functional domain</li>
+              <li>Stories: As a / I want / so that</li>
+              <li>Fibonacci story points</li>
+              <li>Priority, sprint, fix version</li>
+              <li>API push or CSV/XLSX export</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="gate">
+        <span style="font-size:10.5px;font-weight:800;color:var(--gate);">👤 GATE 1 — BRD Sign-Off Checklist</span>
+        <ul class="ck" style="font-size:10px;margin-top:5px;column-count:2;column-gap:10px;">
+          <li>All 19 BRD sections populated</li>
+          <li>All 🔴 Critical guardrail gaps resolved</li>
+          <li>Discovery 100% complete</li>
+          <li>BRD signed off by project sponsor</li>
+          <li>Jira backlog created and groomed</li>
+          <li>BRD saved as v1.0 Approved</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 3 — PILLAR 02: SOLUTION DESIGN
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide sol-slide" id="s3">
+  <div class="pillar-tag sol">02 · SOLUTION DESIGN PILLAR</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a1a3a,#a855f7);">🧩</div>
+    <h2>Solution Design — SDD · Architecture · API Contracts · Tech Stack · LLD</h2>
+  </div>
+  <div class="phase-strip">
+    <div class="ps dim">PM ✓</div><div class="ps dim">→ Gate 1 ✓</div>
+    <div class="ps sol">SDD HLD</div><div class="ps sol">Architecture</div>
+    <div class="ps sol">API Design</div><div class="ps sol">LLD</div>
+    <div class="ps sol">Security</div><div class="ps dim">→ Gate 2</div>
+    <div class="ps dim">Dev ▸</div><div class="ps dim">Exe ▸</div>
+  </div>
+
+  <div class="g2" style="flex:1;gap:11px;">
+    <!-- LEFT: SDD structure -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card sol" style="padding:9px 12px;">
+        <h3 style="color:var(--sol);margin-bottom:7px;">📐 SDD — Solution Design Document (27 Sections)</h3>
+        <div class="g3" style="gap:4px;font-size:9.5px;">
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Context</p>
+            <ul class="ck">
+              <li>§1 Project overview</li><li>§2 Business context</li>
+              <li>§3 Scope &amp; objectives</li><li>§4 Constraints &amp; assumptions</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Architecture</p>
+            <ul class="ck">
+              <li>§5 Architecture overview</li><li>§6 Tech stack decisions</li>
+              <li>§7 End-to-end flows</li><li>§8 Data model / schema</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Integration</p>
+            <ul class="ck">
+              <li>§9 API contracts</li><li>§10 3rd-party integrations</li>
+              <li>§11 Auth &amp; security</li><li>§12 Error handling</li>
+            </ul>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="g3" style="gap:4px;font-size:9.5px;">
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Infrastructure</p>
+            <ul class="ck">
+              <li>§13 Hosting &amp; cloud</li><li>§14 CI/CD pipeline</li>
+              <li>§15 Scaling strategy</li><li>§16 DR &amp; backup</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Quality</p>
+            <ul class="ck">
+              <li>§17 NFR targets</li><li>§18 Monitoring &amp; alerts</li>
+              <li>§19 Performance benchmarks</li><li>§20 Security posture</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Delivery</p>
+            <ul class="ck">
+              <li>§21 Phase plan</li><li>§22 Migration strategy</li>
+              <li>§23 Cutover plan</li><li>§24 ADR register</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sol" style="padding:9px 12px;">
+        <h3 style="color:var(--sol);margin-bottom:6px;">🤖 AI-Powered SDD — 8 Parallel Sub-Agents</h3>
+        <div class="g2" style="gap:6px;font-size:10px;">
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;">
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">Agent Orchestration</p>
+            <ul class="ck">
+              <li>Step 0: Context gather from BRD</li>
+              <li>Step 1: Requirements extraction</li>
+              <li>Review checkpoint (👤 sign-off)</li>
+              <li>8 writers launched in parallel</li>
+            </ul>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;">
+            <p style="color:var(--sol);font-weight:700;margin-bottom:3px;">AI Validation Checks</p>
+            <ul class="ck">
+              <li>Pre-write validation (Pattern 4a)</li>
+              <li>25-point pitfalls check</li>
+              <li>E2E flow trace (§7 guardrail)</li>
+              <li>ADR conflict detection</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: tech + gate -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--sol);margin-bottom:7px;">⚙️ Technology Decisions — Web &amp; App Dev</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="sol">Layer</th><th class="sol">Web Options</th><th class="sol">Mobile Options</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--sol);font-weight:700;">Frontend</td><td>React / Next.js / Vue / Angular</td><td>React Native / Flutter / Swift / Kotlin</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">Backend</td><td>Node.js / Python / Java / Go</td><td>Same + BFF layer per platform</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">API</td><td>REST / GraphQL / gRPC</td><td>REST + WebSocket for real-time</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">Database</td><td>PostgreSQL / MySQL / MongoDB</td><td>SQLite (local) + cloud sync</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">Auth</td><td>OAuth2 / JWT / SSO / SAML</td><td>Biometric + OAuth2 / OTP</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">Cloud</td><td>AWS / GCP / Azure / Vercel</td><td>Same + App Store deployment</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">CDN / Cache</td><td>CloudFront / Redis / Varnish</td><td>CDN + offline cache strategy</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--sol);margin-bottom:6px;">📋 Architecture Decision Records (ADRs)</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="sol">ADR ID</th><th class="sol">Decision</th><th class="sol">Status</th></tr></thead>
+          <tbody>
+            <tr><td>ADR-001</td><td>Frontend framework selection</td><td><span class="pill sol">Approved</span></td></tr>
+            <tr><td>ADR-002</td><td>Monolith vs microservices</td><td><span class="pill sol">Approved</span></td></tr>
+            <tr><td>ADR-003</td><td>Async vs sync API pattern</td><td><span class="pill o">Review</span></td></tr>
+            <tr><td>ADR-004</td><td>Auth provider selection</td><td><span class="pill g">Locked</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gate">
+        <span style="font-size:10.5px;font-weight:800;color:var(--gate);">👤 GATE 2 — SDD Sign-Off Checklist</span>
+        <ul class="ck" style="font-size:10px;margin-top:5px;column-count:2;column-gap:10px;">
+          <li>All 27 SDD sections complete</li>
+          <li>Architecture approved by tech lead</li>
+          <li>All ADRs reviewed &amp; locked</li>
+          <li>API contracts finalised</li>
+          <li>Security review passed</li>
+          <li>Dev team ready to start</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 4 — PILLAR 03: DEVELOPMENT
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide dev-slide" id="s4">
+  <div class="pillar-tag dev">03 · DEVELOPMENT PILLAR</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1a2e20,#27ae60);">⚙️</div>
+    <h2>Development — Environment · Sprints · CI/CD · Code Review · Staging</h2>
+  </div>
+  <div class="phase-strip">
+    <div class="ps dim">PM ✓</div><div class="ps dim">Sol ✓</div><div class="ps dim">→ Gate 2 ✓</div>
+    <div class="ps dev">Env Setup</div><div class="ps dev">Sprint Dev</div>
+    <div class="ps dev">CI/CD</div><div class="ps dev">Integration</div>
+    <div class="ps dev">Staging</div><div class="ps dim">→ Gate 3</div><div class="ps dim">Exe ▸</div>
+  </div>
+
+  <div class="g3" style="flex:1;gap:10px;">
+    <!-- COL 1: Environment & Sprint -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card dev" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🖥️ Environment Setup</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Dev / Staging / Production environments</li>
+          <li>Repository structure &amp; branching strategy</li>
+          <li>Docker / container setup</li>
+          <li>Secrets management (Vault / AWS SM)</li>
+          <li>Local dev environment documented</li>
+          <li>Database migrations pipeline</li>
+          <li>Environment-specific config files</li>
+        </ul>
+      </div>
+
+      <div class="card dev" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🗓️ Sprint Delivery Model</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="dev">Sprint Event</th><th class="dev">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Sprint Planning</td><td>Pull stories from backlog, estimate, commit</td></tr>
+            <tr><td>Daily Standup</td><td>Blockers, progress, today's plan</td></tr>
+            <tr><td>Dev &amp; Review</td><td>Feature build, PR raised, reviewed, merged</td></tr>
+            <tr><td>Sprint Review</td><td>Demo to stakeholders, accept/reject</td></tr>
+            <tr><td>Retrospective</td><td>Team process improvement</td></tr>
+            <tr><td>Bug Triage</td><td>Defects logged in Jira, severity assigned</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🌿 Git Branching Strategy</h3>
+        <div style="font-family:'Courier New',monospace;font-size:9.5px;line-height:1.7;color:var(--muted);">
+          <p><span style="color:var(--dev);">main</span>  ← production only, protected</p>
+          <p><span style="color:var(--pm);">develop</span>  ← integration branch</p>
+          <p><span style="color:var(--sol);">feature/FR-xxx-name</span>  ← per story</p>
+          <p><span style="color:var(--orange);">hotfix/issue-name</span>  ← production fixes</p>
+          <p><span style="color:var(--red);">release/v1.x</span>  ← release candidates</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: CI/CD & Code Quality -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card dev" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🔄 CI/CD Pipeline</h3>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;">1️⃣</span>
+            <div><p style="font-size:10.5px;font-weight:700;color:var(--dev);">Code Push → PR Raised</p><p class="sm">Linting, formatting checks auto-run</p></div>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;">2️⃣</span>
+            <div><p style="font-size:10.5px;font-weight:700;color:var(--dev);">Automated Tests Run</p><p class="sm">Unit tests, integration tests, security scan</p></div>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;">3️⃣</span>
+            <div><p style="font-size:10.5px;font-weight:700;color:var(--dev);">Code Review (2 approvals)</p><p class="sm">Senior dev + architect sign-off on PRs</p></div>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;">4️⃣</span>
+            <div><p style="font-size:10.5px;font-weight:700;color:var(--dev);">Merge → Auto Deploy to Staging</p><p class="sm">Feature flags, smoke tests, Slack notify</p></div>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;">5️⃣</span>
+            <div><p style="font-size:10.5px;font-weight:700;color:var(--dev);">Release → Production</p><p class="sm">Manual gate → blue/green deploy → monitor</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">✅ Code Quality Gates (per PR)</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Unit test coverage ≥ 80%</li>
+          <li>Zero critical SonarQube issues</li>
+          <li>OWASP / Snyk security scan pass</li>
+          <li>API contract linting (OpenAPI)</li>
+          <li>Performance regression check</li>
+          <li>Accessibility scan (WCAG 2.1 AA)</li>
+          <li>Dependency vulnerability scan</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- COL 3: Integration, Staging & Gate -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card dev" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🔌 API Integration Workflow</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="dev">Phase</th><th class="dev">Activity</th></tr></thead>
+          <tbody>
+            <tr><td>Mock</td><td>Mock server (Postman / Prism) from SDD §9</td></tr>
+            <tr><td>Contract</td><td>Consumer-driven contract tests (Pact)</td></tr>
+            <tr><td>Integration</td><td>Live sandbox / dev API calls validated</td></tr>
+            <tr><td>Error paths</td><td>Timeout, 4xx, 5xx, retry logic tested</td></tr>
+            <tr><td>Auth flows</td><td>Token refresh, session expiry, revocation</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--dev);margin-bottom:6px;">🚀 Staging Checklist</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>All Jira stories = Done status</li>
+          <li>All PRs merged to develop branch</li>
+          <li>Staging deploy successful</li>
+          <li>Smoke test suite green</li>
+          <li>No P1/P2 open defects</li>
+          <li>Performance benchmarks met</li>
+          <li>Data migration scripts tested</li>
+        </ul>
+      </div>
+
+      <div class="gate">
+        <span style="font-size:10.5px;font-weight:800;color:var(--gate);">👤 GATE 3 — Dev Complete</span>
+        <ul class="ck" style="font-size:10px;margin-top:5px;">
+          <li>All sprint stories accepted by PO</li>
+          <li>CI/CD pipeline green end-to-end</li>
+          <li>Staging environment validated</li>
+          <li>QA team handed over for testing</li>
+          <li>Runbook drafted for go-live</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 5 — PILLAR 04: EXECUTION — QA & TESTING
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide exe-slide" id="s5">
+  <div class="pillar-tag exe">04 · EXECUTION PILLAR — QA &amp; Testing</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a2000,#f0b429);">🧪</div>
+    <h2>QA &amp; Test Execution — Test Types · Traceability · UAT · Defect Management</h2>
+  </div>
+  <div class="phase-strip">
+    <div class="ps dim">PM ✓</div><div class="ps dim">Sol ✓</div><div class="ps dim">Dev ✓</div><div class="ps dim">→ Gate 3 ✓</div>
+    <div class="ps exe">Test Planning</div><div class="ps exe">Execution</div>
+    <div class="ps exe">UAT</div><div class="ps exe">Defects</div><div class="ps dim">→ Gate 4</div>
+  </div>
+
+  <div class="g3" style="flex:1;gap:10px;">
+    <!-- COL 1: Test Types -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:7px;">🔬 6 Required Test Types</h3>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:var(--pm-bg);color:var(--pm);">1</span>
+            <div><p style="font-size:10.5px;font-weight:700;">Functional Testing</p><p class="sm">Validates system behaviour vs BRD FRs. Every FR → ≥1 positive TC.</p></div>
+          </div>
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:var(--dev-bg);color:var(--dev);">2</span>
+            <div><p style="font-size:10.5px;font-weight:700;">Integration Testing</p><p class="sm">API contracts, data flows, 3rd-party systems, message queues.</p></div>
+          </div>
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:rgba(231,76,60,.15);color:var(--red);">3</span>
+            <div><p style="font-size:10.5px;font-weight:700;">Negative Testing</p><p class="sm">Invalid inputs, missing fields, auth failures, error conditions.</p></div>
+          </div>
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:rgba(230,126,34,.15);color:var(--orange);">4</span>
+            <div><p style="font-size:10.5px;font-weight:700;">Edge Case Testing</p><p class="sm">Boundary values, concurrency, timezone handling, empty states.</p></div>
+          </div>
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:var(--sol-bg);color:var(--sol);">5</span>
+            <div><p style="font-size:10.5px;font-weight:700;">Regression Testing</p><p class="sm">Existing functionality unaffected by new code — run after every fix.</p></div>
+          </div>
+          <div style="display:flex;gap:7px;align-items:flex-start;">
+            <span class="step-num" style="background:var(--exe-bg);color:var(--exe);">6</span>
+            <div><p style="font-size:10.5px;font-weight:700;">UAT — User Acceptance</p><p class="sm">Business stakeholders validate real workflows in UAT environment.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">📊 Coverage Requirements</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="exe">Category</th><th class="exe">Level</th></tr></thead>
+          <tbody>
+            <tr><td>Functional Flows</td><td><span class="pill g">100%</span></td></tr>
+            <tr><td>Business Rules</td><td><span class="pill g">100%</span></td></tr>
+            <tr><td>Error Handling</td><td><span class="pill g">Mandatory</span></td></tr>
+            <tr><td>API Integrations</td><td><span class="pill g">Mandatory</span></td></tr>
+            <tr><td>Security</td><td><span class="pill g">Mandatory</span></td></tr>
+            <tr><td>Performance</td><td><span class="pill o">High-volume only</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COL 2: Traceability + Defect Mgmt -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">🗂️ FR → TC Traceability Matrix</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="exe">FR ID</th><th class="exe">TC ID</th><th class="exe">Scenario</th><th class="exe">Status</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--pm);">FR-001</td><td>TC-001</td><td>Happy path: user login</td><td><span class="pill g">Pass</span></td></tr>
+            <tr><td style="color:var(--pm);">FR-001</td><td>TC-002</td><td>Wrong password → lockout</td><td><span class="pill g">Pass</span></td></tr>
+            <tr><td style="color:var(--pm);">FR-003</td><td>TC-005</td><td>Checkout &amp; payment flow</td><td><span class="pill o">Running</span></td></tr>
+            <tr><td style="color:var(--red);">FR-007</td><td>—</td><td style="color:var(--red);">No TC linked — gap!</td><td><span class="pill r">🔴 Gap</span></td></tr>
+          </tbody>
+        </table>
+        <div class="sm" style="margin-top:5px;color:var(--teal);">📌 Every FR needs ≥1 TC before Gate 4. Missing links are 🔴 Critical gaps.</div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">🐛 Defect Management — Jira</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="exe">Severity</th><th class="exe">Definition</th><th class="exe">SLA</th></tr></thead>
+          <tbody>
+            <tr><td><span style="color:var(--red);font-weight:700;">P1 Critical</span></td><td>System down / data loss</td><td>Fix in 4h, no go-live</td></tr>
+            <tr><td><span style="color:var(--orange);font-weight:700;">P2 High</span></td><td>Core feature broken</td><td>Fix in 24h</td></tr>
+            <tr><td><span style="color:var(--exe);font-weight:700;">P3 Medium</span></td><td>Feature degraded</td><td>Fix this sprint</td></tr>
+            <tr><td><span style="color:var(--dev);font-weight:700;">P4 Low</span></td><td>Minor UI / cosmetic</td><td>Next sprint / backlog</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:6px;background:var(--card2);border-radius:6px;padding:6px 9px;" class="mono">
+          <p style="font-size:9.5px;color:var(--red);">🔴 BUG-042 [P1] — Payment timeout not handled → DEV assigned</p>
+          <p style="font-size:9.5px;color:var(--orange);">🟠 BUG-051 [P2] — Profile image upload fails &gt;5MB → OPEN</p>
+          <p style="font-size:9.5px;color:var(--dev);">✅ BUG-038 [P2] — OTP resend delay fixed → RESOLVED</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">📋 Test Case Standard Fields</h3>
+        <div class="g2" style="gap:3px;font-size:9.5px;">
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">TC ID</span> · Req ID linked</div>
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">Scenario</span> · Preconditions</div>
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">Test Steps</span> · step-by-step</div>
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">Expected</span> · Actual result</div>
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">Status</span> · Pass/Fail/Blocked</div>
+          <div style="background:var(--card2);padding:3px 7px;border-radius:4px;"><span style="color:var(--pm);">Evidence</span> · Screenshots/logs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: UAT + Non-functional + Gate -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">👥 UAT — User Acceptance Testing</h3>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:10.5px;">
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;">
+            <p style="font-weight:700;color:var(--exe);">UAT Environment</p>
+            <p class="sm">Production-like data, real integrations, isolated from dev</p>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;">
+            <p style="font-weight:700;color:var(--exe);">UAT Participants</p>
+            <p class="sm">Business owner, end users, client BPO, PO, QA lead</p>
+          </div>
+          <div style="background:var(--card2);border-radius:6px;padding:6px 9px;">
+            <p style="font-weight:700;color:var(--exe);">UAT Sign-Off</p>
+            <p class="sm">Written sign-off from sponsor · stored in Confluence · required for Gate 4</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">⚡ Non-Functional Testing</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Load test — target TPS at peak traffic</li>
+          <li>Stress test — behaviour beyond normal load</li>
+          <li>Security — OWASP Top 10, pen test</li>
+          <li>Accessibility — WCAG 2.1 AA compliance</li>
+          <li>Compatibility — browsers + device matrix</li>
+          <li>Disaster recovery drill</li>
+        </ul>
+      </div>
+
+      <div class="gate">
+        <span style="font-size:10.5px;font-weight:800;color:var(--gate);">👤 GATE 4 — Go-Live Authorisation</span>
+        <ul class="ck" style="font-size:10px;margin-top:5px;">
+          <li>All FRs have linked, passing TCs</li>
+          <li>Zero P1/P2 open defects</li>
+          <li>UAT signed off by business sponsor</li>
+          <li>Security &amp; performance approved</li>
+          <li>Runbook reviewed &amp; approved</li>
+          <li>Rollback plan confirmed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 6 — PILLAR 04: EXECUTION — GO-LIVE & HYPERCARE
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide exe-slide" id="s6">
+  <div class="pillar-tag exe">04 · EXECUTION PILLAR — Go-Live &amp; Hypercare</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a2000,#f0b429);">🚀</div>
+    <h2>Go-Live Deployment · Monitoring · Hypercare · Handover &amp; Closure</h2>
+  </div>
+  <div class="phase-strip">
+    <div class="ps dim">PM ✓</div><div class="ps dim">Sol ✓</div><div class="ps dim">Dev ✓</div><div class="ps dim">QA ✓</div><div class="ps dim">→ Gate 4 ✓</div>
+    <div class="ps exe">Deploy</div><div class="ps exe">Monitor</div><div class="ps exe">Hypercare</div><div class="ps exe">Handover</div>
+  </div>
+
+  <div class="g2" style="flex:1;gap:11px;">
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:7px;">🚀 Deployment Strategy</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="exe">Strategy</th><th class="exe">When to Use</th><th class="exe">Rollback</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--dev);font-weight:700;">Blue/Green</td><td>Zero-downtime swap between environments</td><td>DNS flip in seconds</td></tr>
+            <tr><td style="color:var(--sol);font-weight:700;">Canary</td><td>Gradual traffic shift (5% → 25% → 100%)</td><td>Redirect traffic back</td></tr>
+            <tr><td style="color:var(--pm);font-weight:700;">Rolling</td><td>Pod-by-pod replacement in Kubernetes</td><td>Rollback kubectl</td></tr>
+            <tr><td style="color:var(--orange);font-weight:700;">Feature Flag</td><td>Code deployed, feature toggled on/off</td><td>Toggle flag off</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">📋 Go-Live Day Runbook</h3>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:10px;">
+          <div style="display:flex;gap:7px;background:var(--card2);padding:5px 8px;border-radius:5px;">
+            <span style="color:var(--exe);font-weight:700;width:50px;flex-shrink:0;">T-48h</span>
+            <span>Final staging validation, stakeholder comms sent, support team briefed</span>
+          </div>
+          <div style="display:flex;gap:7px;background:var(--card2);padding:5px 8px;border-radius:5px;">
+            <span style="color:var(--exe);font-weight:700;width:50px;flex-shrink:0;">T-24h</span>
+            <span>Data migration dry run, infrastructure scaled, monitoring dashboards live</span>
+          </div>
+          <div style="display:flex;gap:7px;background:var(--card2);padding:5px 8px;border-radius:5px;">
+            <span style="color:var(--exe);font-weight:700;width:50px;flex-shrink:0;">T-2h</span>
+            <span>All-hands war room open, rollback plan confirmed, go / no-go call</span>
+          </div>
+          <div style="display:flex;gap:7px;background:rgba(39,174,96,.1);padding:5px 8px;border-radius:5px;border:1px solid var(--dev);">
+            <span style="color:var(--dev);font-weight:800;width:50px;flex-shrink:0;">T=0</span>
+            <span style="color:var(--dev);">🚀 Deploy → smoke test → DNS switch → announce</span>
+          </div>
+          <div style="display:flex;gap:7px;background:var(--card2);padding:5px 8px;border-radius:5px;">
+            <span style="color:var(--exe);font-weight:700;width:50px;flex-shrink:0;">T+1h</span>
+            <span>Monitor error rates, latency, DB load. First business transaction confirmed.</span>
+          </div>
+          <div style="display:flex;gap:7px;background:var(--card2);padding:5px 8px;border-radius:5px;">
+            <span style="color:var(--exe);font-weight:700;width:50px;flex-shrink:0;">T+24h</span>
+            <span>Go-live retrospective, P1 defect sweep, hypercare period begins</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">⚡ Monitoring Stack</h3>
+        <div class="g2" style="gap:5px;font-size:10px;">
+          <div><p style="color:var(--muted);margin-bottom:3px;">Observability</p>
+            <ul class="ck"><li>APM — Datadog / New Relic</li><li>Logs — ELK / CloudWatch</li><li>Traces — Jaeger / X-Ray</li></ul>
+          </div>
+          <div><p style="color:var(--muted);margin-bottom:3px;">Alerting</p>
+            <ul class="ck"><li>PagerDuty / Opsgenie</li><li>Error rate &gt; 1% alert</li><li>P95 latency threshold</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card exe" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">🛡️ Hypercare Period (2–4 Weeks)</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th class="exe">Activity</th><th class="exe">Owner</th><th class="exe">Cadence</th></tr></thead>
+          <tbody>
+            <tr><td>Daily defect triage</td><td>QA Lead + Dev</td><td>Every morning</td></tr>
+            <tr><td>Production monitoring review</td><td>DevOps</td><td>Every 4h</td></tr>
+            <tr><td>Business feedback collection</td><td>PM / BA</td><td>Daily</td></tr>
+            <tr><td>Critical bug hotfixes</td><td>Dev team</td><td>Same day (P1/P2)</td></tr>
+            <tr><td>Hypercare status report</td><td>PM</td><td>Weekly to sponsor</td></tr>
+            <tr><td>Minor enhancement triage</td><td>PM + PO</td><td>Weekly</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">📁 Handover &amp; Project Closure</h3>
+        <div class="g2" style="gap:6px;font-size:10px;">
+          <div>
+            <p style="color:var(--muted);margin-bottom:3px;">Documentation Handover</p>
+            <ul class="ck">
+              <li>BRD v-final archived</li>
+              <li>SDD + ADRs in Confluence</li>
+              <li>API documentation (Swagger)</li>
+              <li>Runbooks for ops team</li>
+              <li>Test reports archived</li>
+            </ul>
+          </div>
+          <div>
+            <p style="color:var(--muted);margin-bottom:3px;">Knowledge Transfer</p>
+            <ul class="ck">
+              <li>Dev team walkthrough session</li>
+              <li>Ops team onboarding</li>
+              <li>Support team training</li>
+              <li>Admin user training</li>
+              <li>Recorded demos stored</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--exe);margin-bottom:6px;">✅ Project Closure Checklist</h3>
+        <ul class="ck" style="font-size:10.5px;column-count:2;column-gap:10px;">
+          <li>All P1/P2 defects resolved</li>
+          <li>Hypercare sign-off received</li>
+          <li>Support team fully onboarded</li>
+          <li>All docs in Confluence</li>
+          <li>CI/CD handed to ops</li>
+          <li>Monitoring &amp; alerting live</li>
+          <li>Lessons learned documented</li>
+          <li>Project retrospective held</li>
+          <li>Final invoice raised</li>
+          <li>Sponsor sign-off on closure</li>
+        </ul>
+      </div>
+
+      <div class="gate">
+        <span style="font-size:10.5px;font-weight:800;color:var(--dev);">✅ PROJECT COMPLETE</span>
+        <span class="sm">  Hypercare ended · Support model active · Product running in production · Docs & runbooks live · Team off-boarded.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 7 — CROSS-PILLAR: ROLES & RACI
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide overview-slide" id="s7">
+  <div class="lbl">Cross-Pillar · All 4 Pillars</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1a3a2a,#00b4a0);">👥</div>
+    <h2>Roles &amp; RACI — Who Does What Across All 4 Pillars</h2>
+  </div>
+
+  <div style="flex:1;overflow:auto;">
+    <table style="font-size:10.5px;">
+      <thead>
+        <tr>
+          <th style="background:#162433;color:var(--muted);width:140px;">Role</th>
+          <th style="background:var(--pm-dark);color:var(--pm);text-align:center;">01 PM</th>
+          <th style="background:var(--sol-dark);color:var(--sol);text-align:center;">02 Solution</th>
+          <th style="background:var(--dev-dark);color:var(--dev);text-align:center;">03 Dev</th>
+          <th style="background:var(--exe-dark);color:var(--exe);text-align:center;">04 Execution</th>
+          <th style="background:#162433;color:var(--muted);">Gate Sign-Off</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:700;color:var(--pm);">Project Manager</td>
+          <td style="text-align:center;"><span class="pill pm">R</span></td>
+          <td style="text-align:center;"><span class="pill pm">A</span></td>
+          <td style="text-align:center;"><span class="pill pm">A</span></td>
+          <td style="text-align:center;"><span class="pill pm">A</span></td>
+          <td>Gate 1 · Gate 4 authoriser</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--muted);">Business Analyst</td>
+          <td style="text-align:center;"><span class="pill pm">R</span></td>
+          <td style="text-align:center;"><span class="pill pm">C</span></td>
+          <td style="text-align:center;"><span class="pill pm">C</span></td>
+          <td style="text-align:center;"><span class="pill pm">C</span></td>
+          <td>BRD quality sign-off</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--sol);">Solution Architect</td>
+          <td style="text-align:center;"><span class="pill sol">C</span></td>
+          <td style="text-align:center;"><span class="pill sol">R</span></td>
+          <td style="text-align:center;"><span class="pill sol">A</span></td>
+          <td style="text-align:center;"><span class="pill sol">C</span></td>
+          <td>Gate 2 · SDD + ADR approval</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--sol);">Tech Lead</td>
+          <td style="text-align:center;"><span class="pill sol">I</span></td>
+          <td style="text-align:center;"><span class="pill sol">R</span></td>
+          <td style="text-align:center;"><span class="pill dev">R</span></td>
+          <td style="text-align:center;"><span class="pill dev">C</span></td>
+          <td>Gate 2 + Gate 3 technical</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--dev);">Developers</td>
+          <td style="text-align:center;"><span class="pill dev">I</span></td>
+          <td style="text-align:center;"><span class="pill dev">C</span></td>
+          <td style="text-align:center;"><span class="pill dev">R</span></td>
+          <td style="text-align:center;"><span class="pill dev">C</span></td>
+          <td>PR self-review + code gate</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--exe);">QA Lead</td>
+          <td style="text-align:center;"><span class="pill exe">C</span></td>
+          <td style="text-align:center;"><span class="pill exe">C</span></td>
+          <td style="text-align:center;"><span class="pill exe">C</span></td>
+          <td style="text-align:center;"><span class="pill exe">R</span></td>
+          <td>Gate 4 QA sign-off</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--teal);">DevOps / Infra</td>
+          <td style="text-align:center;"><span style="color:var(--teal);">I</span></td>
+          <td style="text-align:center;"><span style="color:var(--teal);">C</span></td>
+          <td style="text-align:center;"><span style="color:var(--teal);">R</span></td>
+          <td style="text-align:center;"><span style="color:var(--teal);">R</span></td>
+          <td>CI/CD + Go-live deploy</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--muted);">Product Owner</td>
+          <td style="text-align:center;"><span class="pill pm">C</span></td>
+          <td style="text-align:center;"><span class="pill sol">C</span></td>
+          <td style="text-align:center;"><span class="pill dev">A</span></td>
+          <td style="text-align:center;"><span class="pill exe">A</span></td>
+          <td>Story acceptance + UAT oversight</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--muted);">Client / Sponsor</td>
+          <td style="text-align:center;"><span class="pill pm">A</span></td>
+          <td style="text-align:center;"><span class="pill sol">A</span></td>
+          <td style="text-align:center;"><span class="pill dev">I</span></td>
+          <td style="text-align:center;"><span class="pill exe">A</span></td>
+          <td>Gate 1, 2, 4 final sign-off</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--muted);">Security / Compliance</td>
+          <td style="text-align:center;"><span style="color:var(--muted);">C</span></td>
+          <td style="text-align:center;"><span class="pill sol">C</span></td>
+          <td style="text-align:center;"><span style="color:var(--muted);">C</span></td>
+          <td style="text-align:center;"><span class="pill exe">R</span></td>
+          <td>Security gate in Gate 4</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="g4" style="margin-top:9px;gap:8px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 11px;text-align:center;">
+      <span style="font-size:15px;font-weight:800;color:var(--pm);">R</span>
+      <p style="font-size:10px;color:var(--muted);margin-top:2px;">Responsible — does the work</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 11px;text-align:center;">
+      <span style="font-size:15px;font-weight:800;color:var(--exe);">A</span>
+      <p style="font-size:10px;color:var(--muted);margin-top:2px;">Accountable — owns outcome</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 11px;text-align:center;">
+      <span style="font-size:15px;font-weight:800;color:var(--dev);">C</span>
+      <p style="font-size:10px;color:var(--muted);margin-top:2px;">Consulted — provides input</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 11px;text-align:center;">
+      <span style="font-size:15px;font-weight:800;color:var(--sol);">I</span>
+      <p style="font-size:10px;color:var(--muted);margin-top:2px;">Informed — kept updated</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  SLIDE 8 — CROSS-PILLAR: REPOSITORY + TIMELINE + KPIs
+═══════════════════════════════════════════════════════════════════ -->
+<section class="slide overview-slide" id="s8">
+  <div class="lbl">Cross-Pillar · Delivery Governance</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#0a2a28,#00b4a0);">📁</div>
+    <h2>Repository · Indicative Timeline · KPIs &amp; Success Metrics</h2>
+  </div>
+
+  <div class="g3" style="flex:1;gap:10px;">
+    <!-- COL 1: Repository -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card tl" style="padding:9px 12px;">
+        <h3 style="color:var(--teal);margin-bottom:7px;">📁 Confluence Repository Structure</h3>
+        <div style="font-family:'Courier New',monospace;font-size:9.5px;line-height:1.8;color:var(--muted);">
+          <p style="color:var(--teal);">📁 [Project Name] — Root</p>
+          <p style="color:var(--pm);">  ├── 📋 PM Documents</p>
+          <p style="padding-left:20px;">BRD_v1.0.docx · BRD_vX.X.docx</p>
+          <p style="padding-left:20px;">Key_Gaps_Report.txt</p>
+          <p style="padding-left:20px;">Discovery_Dashboard.html</p>
+          <p style="padding-left:20px;">Jira_Epics_Stories.xlsx</p>
+          <p style="color:var(--sol);">  ├── 🧩 Solution Design</p>
+          <p style="padding-left:20px;">SDD_v1.0.docx · ADR_Register.xlsx</p>
+          <p style="padding-left:20px;">API_Contracts_Swagger.yaml</p>
+          <p style="padding-left:20px;">Architecture_Diagrams.png</p>
+          <p style="color:var(--dev);">  ├── ⚙️ Development</p>
+          <p style="padding-left:20px;">Tech_Stack_Decision.md</p>
+          <p style="padding-left:20px;">CI_CD_Pipeline.md</p>
+          <p style="padding-left:20px;">Sprint_Reports/</p>
+          <p style="color:var(--exe);">  ├── 🧪 QA &amp; Testing</p>
+          <p style="padding-left:20px;">Test_Plan.xlsx · TC_Traceability.xlsx</p>
+          <p style="padding-left:20px;">UAT_Sign_Off.docx</p>
+          <p style="padding-left:20px;">Test_Reports/ · Defect_Log.xlsx</p>
+          <p style="color:var(--teal);">  └── 🚀 Go-Live</p>
+          <p style="padding-left:20px;">Runbook.md · Rollback_Plan.md</p>
+          <p style="padding-left:20px;">Hypercare_Report.docx</p>
+          <p style="padding-left:20px;">Handover_Checklist.docx</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: Timeline -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--muted);margin-bottom:7px;">🗓️ Indicative Timeline (MVP Web/App)</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th>Phase</th><th>Pillar</th><th>Typical Duration</th></tr></thead>
+          <tbody>
+            <tr><td>Intake &amp; BRD</td><td><span class="pill pm">PM</span></td><td>1–2 weeks</td></tr>
+            <tr><td>Discovery &amp; Guardrails</td><td><span class="pill pm">PM</span></td><td>1 week</td></tr>
+            <tr><td><strong style="color:var(--gate);">👤 Gate 1</strong></td><td>—</td><td>1–3 days</td></tr>
+            <tr><td>SDD &amp; Architecture</td><td><span class="pill sol">Sol</span></td><td>2–3 weeks</td></tr>
+            <tr><td>LLD &amp; ADRs</td><td><span class="pill sol">Sol</span></td><td>1 week</td></tr>
+            <tr><td><strong style="color:var(--gate);">👤 Gate 2</strong></td><td>—</td><td>2–5 days</td></tr>
+            <tr><td>Environment &amp; Sprint 1</td><td><span class="pill dev">Dev</span></td><td>2 weeks</td></tr>
+            <tr><td>Sprint build cycles</td><td><span class="pill dev">Dev</span></td><td>4–12 weeks</td></tr>
+            <tr><td>Staging &amp; integration</td><td><span class="pill dev">Dev</span></td><td>1 week</td></tr>
+            <tr><td><strong style="color:var(--gate);">👤 Gate 3</strong></td><td>—</td><td>2–3 days</td></tr>
+            <tr><td>QA test execution</td><td><span class="pill exe">Exe</span></td><td>2–3 weeks</td></tr>
+            <tr><td>UAT + defect fixes</td><td><span class="pill exe">Exe</span></td><td>1–2 weeks</td></tr>
+            <tr><td><strong style="color:var(--gate);">👤 Gate 4</strong></td><td>—</td><td>1–2 days</td></tr>
+            <tr><td>Go-live + Hypercare</td><td><span class="pill exe">Exe</span></td><td>2–4 weeks</td></tr>
+          </tbody>
+        </table>
+        <div class="sm" style="margin-top:5px;">Total MVP: typically <strong style="color:var(--text);">4–6 months</strong> · Enterprise: 6–18 months</div>
+      </div>
+    </div>
+
+    <!-- COL 3: KPIs -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card" style="padding:9px 12px;">
+        <h3 style="color:var(--muted);margin-bottom:7px;">📊 Delivery KPIs — Per Pillar</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th>Pillar</th><th>KPI</th><th>Target</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pill pm">PM</span></td><td>BRD completion</td><td>19/19 sections</td></tr>
+            <tr><td><span class="pill pm">PM</span></td><td>Guardrail pass rate</td><td>7/7 categories</td></tr>
+            <tr><td><span class="pill pm">PM</span></td><td>Discovery completeness</td><td>100%</td></tr>
+            <tr><td><span class="pill sol">Sol</span></td><td>SDD sections complete</td><td>27/27</td></tr>
+            <tr><td><span class="pill sol">Sol</span></td><td>ADRs reviewed</td><td>100% locked</td></tr>
+            <tr><td><span class="pill dev">Dev</span></td><td>Sprint velocity</td><td>Stable ±15%</td></tr>
+            <tr><td><span class="pill dev">Dev</span></td><td>Unit test coverage</td><td>≥ 80%</td></tr>
+            <tr><td><span class="pill dev">Dev</span></td><td>PR review cycle time</td><td>&lt; 24h</td></tr>
+            <tr><td><span class="pill exe">Exe</span></td><td>TC pass rate (go-live)</td><td>100% P1/P2</td></tr>
+            <tr><td><span class="pill exe">Exe</span></td><td>Open P1 defects at launch</td><td>0</td></tr>
+            <tr><td><span class="pill exe">Exe</span></td><td>UAT sign-off</td><td>Written · stored</td></tr>
+            <tr><td><span class="pill exe">Exe</span></td><td>Production uptime (post-launch)</td><td>≥ 99.5%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="gate" style="padding:10px 13px;">
+        <p style="font-size:10px;font-weight:800;color:var(--gate);margin-bottom:6px;">🔁 Change Request Flow (any pillar)</p>
+        <div style="display:flex;flex-direction:column;gap:3px;font-size:10px;">
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--pm);font-weight:700;flex-shrink:0;">1.</span><span>CR raised &amp; classified (scope / effort / risk)</span>
+          </div>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--pm);font-weight:700;flex-shrink:0;">2.</span><span>BRD updated to new version (vX.X)</span>
+          </div>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--pm);font-weight:700;flex-shrink:0;">3.</span><span>Guardrail re-check triggered</span>
+          </div>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--pm);font-weight:700;flex-shrink:0;">4.</span><span>SDD updated if architecture affected</span>
+          </div>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--pm);font-weight:700;flex-shrink:0;">5.</span><span>Jira stories created &amp; added to backlog</span>
+          </div>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <span style="color:var(--gate);font-weight:700;flex-shrink:0;">6.</span><span>👤 Sponsor approves CR before dev starts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<!-- DOTS -->
+<div id="dots" style="position:fixed;bottom:17px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:200;align-items:center;"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="go(-1)">← Prev</button>
+  <span class="counter" id="counter">1 / 1</span>
+  <button onclick="go(1)">Next →</button>
+</div>
+<div class="progress-bar" id="bar"></div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dotsEl = document.getElementById('dots');
+let cur = 0;
+
+// Dot config per slide
+const dotMeta = [
+  {cls:'ov',  label:'Overview'},
+  {cls:'pm',  label:'PM'},
+  {cls:'sol', label:'Solution'},
+  {cls:'dev', label:'Dev'},
+  {cls:'exe', label:'QA'},
+  {cls:'exe', label:'Go-Live'},
+  {cls:'ov',  label:'RACI'},
+  {cls:'ov',  label:'Timeline'},
+];
+
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot ' + (dotMeta[i]?.cls || 'ov') + (i === 0 ? ' on' : '');
+  d.title = dotMeta[i]?.label || '';
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function sync() {
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+}
+
+function goTo(n) {
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('prev');
+  cur = Math.max(0, Math.min(slides.length - 1, n));
+  slides[cur].classList.add('active');
+  sync();
+  setTimeout(() => slides.forEach(s => { if (!s.classList.contains('active')) s.classList.remove('prev'); }), 360);
+}
+
+function go(d) { goTo(cur + d); }
+
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(1); }
+  if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); go(-1); }
+});
+
+sync();
+</script>
+</body>
+</html>
