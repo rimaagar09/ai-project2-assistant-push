@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Delivery Pipeline — Universal Project Framework</title>
+<style>
+  :root {
+    --blue:#1a3a5c; --blue-mid:#1e5799; --accent:#00c6ff; --accent2:#f0b429;
+    --green:#27ae60; --red:#e74c3c; --orange:#e67e22; --purple:#a855f7;
+    --teal:#00b4a0; --pink:#ec4899; --indigo:#4f6ef7;
+    --bg:#0d1b2a; --card:#162433; --text:#e8edf2; --muted:#8fa3b8; --border:#2a4057;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;}
+  .deck{width:100vw;height:100vh;position:relative;}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:26px 48px 60px;
+    opacity:0;pointer-events:none;overflow:hidden;
+    transition:opacity .32s ease,transform .32s ease;
+    transform:translateX(40px);
+  }
+  .slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+  .slide.prev{opacity:0;transform:translateX(-40px);}
+  .nav{position:fixed;bottom:18px;right:32px;display:flex;gap:10px;z-index:100;align-items:center;}
+  .nav button{background:var(--card);border:1px solid var(--border);color:var(--text);
+    padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px;transition:all .2s;}
+  .nav button:hover{background:var(--blue-mid);border-color:var(--accent);}
+  .nav .counter{color:var(--muted);font-size:12px;min-width:52px;text-align:center;}
+  .progress{position:fixed;bottom:0;left:0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2),var(--purple));
+    transition:width .32s ease;}
+  .dots{position:fixed;bottom:19px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:100;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .22s;}
+  .dot.on{background:var(--accent);transform:scale(1.35);}
+  .lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+  h2{font-size:23px;font-weight:700;line-height:1.25;}
+  h3{font-size:12.5px;font-weight:700;color:var(--accent);}
+  .hdr{display:flex;align-items:center;gap:13px;margin-bottom:13px;}
+  .icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .ac{border-color:var(--accent)!important;}  .gr{border-color:var(--green)!important;}
+  .or{border-color:var(--orange)!important;} .rd{border-color:var(--red)!important;}
+  .pu{border-color:var(--purple)!important;} .yw{border-color:var(--accent2)!important;}
+  .tl{border-color:var(--teal)!important;}   .in{border-color:var(--indigo)!important;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{background:var(--blue);color:var(--accent);padding:6px 10px;text-align:left;font-weight:600;font-size:11px;}
+  td{padding:5px 10px;border-bottom:1px solid var(--border);font-size:11.5px;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:600;}
+  .pb{background:rgba(30,87,153,.4);color:var(--accent);}
+  .pg{background:rgba(39,174,96,.2);color:var(--green);}
+  .po{background:rgba(230,126,34,.2);color:var(--orange);}
+  .pr{background:rgba(231,76,60,.2);color:var(--red);}
+  .pp{background:rgba(168,85,247,.2);color:var(--purple);}
+  .tag{display:inline-block;background:rgba(0,198,255,.1);color:var(--accent);
+    border-radius:4px;padding:1px 7px;font-size:10.5px;margin:1px 2px;}
+  ul.ck{margin:0;padding:0;}
+  ul.ck li{list-style:none;padding-left:17px;position:relative;margin-bottom:4px;font-size:11.5px;color:var(--text);}
+  ul.ck li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:700;}
+  ul.ck li.no::before{content:'✗';color:var(--red);}
+  ul.ck li.wd::before{content:'⚠';color:var(--accent2);}
+  .badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,198,255,.08);
+    border:1px solid rgba(0,198,255,.22);border-radius:20px;padding:4px 13px;
+    font-size:10.5px;font-weight:700;color:var(--accent);}
+  .sep{height:1px;background:var(--border);margin:8px 0;}
+  .mono{font-family:'Courier New',monospace;}
+  .sm{font-size:10.5px;color:var(--muted);}
+  .phase-strip{display:flex;gap:0;margin-bottom:11px;}
+  .ps{flex:1;text-align:center;padding:6px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+  .ps.active-tab{border-bottom-color:var(--accent);color:var(--accent);}
+  .ps:not(.active-tab){color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 1 — UNIVERSAL PIPELINE OVERVIEW
+══════════════════════════════════════════════════════════ -->
+<section class="slide active" id="s1">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+    <div class="lbl" style="margin-bottom:0;">Universal · Any Project Type · SOW / New Requirements / Change Request</div>
+    <div class="badge">🤖 AI-Powered PM Pipeline · Powered by Claude</div>
+  </div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1e5799,#00c6ff);">🗺️</div>
+    <h2>End-to-End PM Delivery Pipeline — Works for Any Project, Any Domain, Any Team</h2>
+  </div>
+
+
+  <svg viewBox="0 0 960 268" style="width:100%;max-height:258px;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ma" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#00c6ff"/></marker>
+      <marker id="mg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#27ae60"/></marker>
+      <marker id="my" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#f0b429"/></marker>
+      <marker id="mp" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#a855f7"/></marker>
+      <marker id="mr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#e74c3c"/></marker>
+      <marker id="mt" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#00b4a0"/></marker>
+    </defs>
+
+    <!-- INPUTS row -->
+    <rect x="4"  y="10" width="88" height="36" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.3"/>
+    <text x="48" y="26" text-anchor="middle" fill="#8fa3b8" font-size="12">📑</text>
+    <text x="48" y="40" text-anchor="middle" fill="#e8edf2" font-size="9.5" font-weight="600" font-family="Segoe UI,sans-serif">SOW / Contract</text>
+    <rect x="4"  y="54" width="88" height="36" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.3"/>
+    <text x="48" y="70" text-anchor="middle" fill="#8fa3b8" font-size="12">📋</text>
+    <text x="48" y="84" text-anchor="middle" fill="#e8edf2" font-size="9.5" font-weight="600" font-family="Segoe UI,sans-serif">New Requirement</text>
+    <rect x="4"  y="98" width="88" height="36" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.3"/>
+    <text x="48" y="114" text-anchor="middle" fill="#8fa3b8" font-size="12">🔄</text>
+    <text x="48" y="128" text-anchor="middle" fill="#e8edf2" font-size="9.5" font-weight="600" font-family="Segoe UI,sans-serif">Change Request</text>
+    <rect x="4"  y="142" width="88" height="36" rx="7" fill="#162433" stroke="#2a4057" stroke-width="1.3"/>
+    <text x="48" y="158" text-anchor="middle" fill="#8fa3b8" font-size="12">💡</text>
+    <text x="48" y="172" text-anchor="middle" fill="#e8edf2" font-size="9.5" font-weight="600" font-family="Segoe UI,sans-serif">Product Brief</text>
+    <!-- funnel arrow -->
+    <line x1="92" y1="28"  x2="106" y2="98"  stroke="#2a4057" stroke-width="1"/>
+    <line x1="92" y1="72"  x2="106" y2="100" stroke="#2a4057" stroke-width="1"/>
+    <line x1="92" y1="116" x2="106" y2="102" stroke="#2a4057" stroke-width="1"/>
+    <line x1="92" y1="160" x2="106" y2="104" stroke="#2a4057" stroke-width="1"/>
+    <line x1="106" y1="102" x2="126" y2="102" stroke="#8fa3b8" stroke-width="1.5" marker-end="url(#ma)"/>
+
+    <!-- PHASE 01 — INTAKE & BRD -->
+    <rect x="128" y="64" width="138" height="120" rx="9" fill="#1a3a5c" stroke="#00c6ff" stroke-width="2"/>
+    <text x="197" y="84"  text-anchor="middle" fill="#00c6ff" font-size="9.5" font-weight="700" font-family="Segoe UI,sans-serif" letter-spacing="1">PHASE 01</text>
+    <text x="197" y="97"  text-anchor="middle" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">Intake &amp; BRD Creation</text>
+    <line x1="140" y1="105" x2="260" y2="105" stroke="#2a4057" stroke-width="0.7"/>
+    <text x="140" y="118" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Structured Q&amp;A (agent)</text>
+    <text x="140" y="132" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Scope definition</text>
+    <text x="140" y="146" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Requirements (FR/NFR)</text>
+    <text x="140" y="160" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ BRD .docx output</text>
+    <text x="140" y="174" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Journey flow diagram</text>
+    <line x1="266" y1="124" x2="286" y2="124" stroke="#00c6ff" stroke-width="1.5" marker-end="url(#ma)"/>
+
+    <!-- GUARDRAIL CHECK -->
+    <rect x="288" y="86" width="118" height="76" rx="8" fill="#1c1020" stroke="#e74c3c" stroke-width="1.8"/>
+    <text x="347" y="105" text-anchor="middle" fill="#e74c3c" font-size="9" font-weight="700" font-family="Segoe UI,sans-serif" letter-spacing=".8">🛡️ GUARDRAIL CHECK</text>
+    <text x="347" y="118" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">Auto · every BRD version</text>
+    <line x1="298" y1="126" x2="398" y2="126" stroke="#2a4057" stroke-width="0.6"/>
+    <text x="298" y="138" fill="#e8edf2" font-size="8" font-family="Segoe UI,sans-serif">7 categories · Gap IDs</text>
+    <text x="298" y="150" fill="#e8edf2" font-size="8" font-family="Segoe UI,sans-serif">🔴 Critical 🟡 Risk 🟠 Warn</text>
+    <line x1="406" y1="124" x2="424" y2="124" stroke="#e74c3c" stroke-width="1.5" marker-end="url(#mr)"/>
+
+    <!-- GATE 1 -->
+    <rect x="426" y="108" width="48" height="32" rx="6" fill="#0d1b2a" stroke="#f0b429" stroke-width="2"/>
+    <text x="450" y="122" text-anchor="middle" fill="#f0b429" font-size="8.5" font-weight="700" font-family="Segoe UI,sans-serif">GATE 1</text>
+    <text x="450" y="134" text-anchor="middle" fill="#f0b429" font-size="9">👤</text>
+    <line x1="474" y1="124" x2="492" y2="124" stroke="#f0b429" stroke-width="1.5" marker-end="url(#my)"/>
+
+    <!-- PHASE 02 — DISCOVERY -->
+    <rect x="494" y="64" width="138" height="120" rx="9" fill="#1a2e20" stroke="#27ae60" stroke-width="2"/>
+    <text x="563" y="84"  text-anchor="middle" fill="#27ae60" font-size="9.5" font-weight="700" font-family="Segoe UI,sans-serif" letter-spacing="1">PHASE 02</text>
+    <text x="563" y="97"  text-anchor="middle" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">Discovery &amp; Validation</text>
+    <line x1="506" y1="105" x2="626" y2="105" stroke="#2a4057" stroke-width="0.7"/>
+    <text x="506" y="118" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ BRD auto-prefill</text>
+    <text x="506" y="132" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Yes/No quick confirm</text>
+    <text x="506" y="146" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Open Q register</text>
+    <text x="506" y="160" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Guardrail status panel</text>
+    <text x="506" y="174" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ 100% completion gate</text>
+    <line x1="632" y1="124" x2="652" y2="124" stroke="#27ae60" stroke-width="1.5" marker-end="url(#mg)"/>
+
+    <!-- GATE 2 -->
+    <rect x="654" y="108" width="48" height="32" rx="6" fill="#0d1b2a" stroke="#f0b429" stroke-width="2"/>
+    <text x="678" y="122" text-anchor="middle" fill="#f0b429" font-size="8.5" font-weight="700" font-family="Segoe UI,sans-serif">GATE 2</text>
+    <text x="678" y="134" text-anchor="middle" fill="#f0b429" font-size="9">👤</text>
+    <line x1="702" y1="124" x2="720" y2="124" stroke="#f0b429" stroke-width="1.5" marker-end="url(#my)"/>
+
+    <!-- PHASE 03 — DELIVERY -->
+    <rect x="722" y="64" width="138" height="120" rx="9" fill="#2a1a3a" stroke="#a855f7" stroke-width="2"/>
+    <text x="791" y="84"  text-anchor="middle" fill="#a855f7" font-size="9.5" font-weight="700" font-family="Segoe UI,sans-serif" letter-spacing="1">PHASE 03</text>
+    <text x="791" y="97"  text-anchor="middle" fill="#e8edf2" font-size="8.5" font-family="Segoe UI,sans-serif">Delivery Planning</text>
+    <line x1="734" y1="105" x2="854" y2="105" stroke="#2a4057" stroke-width="0.7"/>
+    <text x="734" y="118" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Epics + User Stories</text>
+    <text x="734" y="132" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Story points + priority</text>
+    <text x="734" y="146" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Sprint plan</text>
+    <text x="734" y="160" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ Jira API push / CSV</text>
+    <text x="734" y="174" fill="#e8edf2" font-size="9" font-family="Segoe UI,sans-serif">→ XLSX backlog export</text>
+
+    <!-- OUTPUTS -->
+    <rect x="876" y="68"  width="80" height="28" rx="6" fill="#162433" stroke="#a855f7" stroke-width="1.2"/>
+    <text x="916" y="86" text-anchor="middle" fill="#a855f7" font-size="9" font-family="Segoe UI,sans-serif" font-weight="600">📌 Live Jira Board</text>
+    <rect x="876" y="104" width="80" height="28" rx="6" fill="#162433" stroke="#27ae60" stroke-width="1.2"/>
+    <text x="916" y="122" text-anchor="middle" fill="#27ae60" font-size="9" font-family="Segoe UI,sans-serif" font-weight="600">📁 Confluence Docs</text>
+    <rect x="876" y="140" width="80" height="28" rx="6" fill="#162433" stroke="#00c6ff" stroke-width="1.2"/>
+    <text x="916" y="158" text-anchor="middle" fill="#00c6ff" font-size="9" font-family="Segoe UI,sans-serif" font-weight="600">📊 Sprint Backlog</text>
+    <line x1="860" y1="100" x2="874" y2="82"  stroke="#a855f7" stroke-width="1.1" marker-end="url(#mp)"/>
+    <line x1="860" y1="118" x2="874" y2="118" stroke="#27ae60" stroke-width="1.1" marker-end="url(#mg)"/>
+    <line x1="860" y1="138" x2="874" y2="154" stroke="#00c6ff" stroke-width="1.1" marker-end="url(#ma)"/>
+
+    <!-- Confluence bar -->
+    <rect x="128" y="204" width="828" height="20" rx="6" fill="rgba(0,180,160,.08)" stroke="#00b4a0" stroke-width="1"/>
+    <text x="542" y="218" text-anchor="middle" fill="#00b4a0" font-size="9.5" font-weight="600" font-family="Segoe UI,sans-serif">📁 Project Repository (Confluence / SharePoint / Google Drive) — BRD Docs · Discovery · Jira Backlog · Stakeholder Docs · Specs</text>
+
+    <!-- stats -->
+    <text x="4"   y="248" fill="#8fa3b8" font-size="9.5" font-family="Segoe UI,sans-serif">Works for any domain</text>
+    <text x="130" y="248" fill="#2a4057" font-size="9.5">·</text>
+    <text x="140" y="248" fill="#8fa3b8" font-size="9.5" font-family="Segoe UI,sans-serif">SOW / Requirements / CRs</text>
+    <text x="290" y="248" fill="#2a4057" font-size="9.5">·</text>
+    <text x="300" y="248" fill="#8fa3b8" font-size="9.5" font-family="Segoe UI,sans-serif">7 guardrail categories</text>
+    <text x="440" y="248" fill="#2a4057" font-size="9.5">·</text>
+    <text x="450" y="248" fill="#8fa3b8" font-size="9.5" font-family="Segoe UI,sans-serif">2 human-approval gates</text>
+    <text x="600" y="248" fill="#2a4057" font-size="9.5">·</text>
+    <text x="610" y="248" fill="#8fa3b8" font-size="9.5" font-family="Segoe UI,sans-serif">Jira-ready output every time</text>
+  </svg>
+
+  <div style="margin-top:8px;padding:8px 14px;background:rgba(240,180,41,.07);border:1px solid rgba(240,180,41,.28);border-radius:7px;display:flex;align-items:center;gap:10px;">
+    <span style="font-size:15px;flex-shrink:0;">👤</span>
+    <span style="font-size:11px;color:var(--muted);">
+      <strong style="color:var(--accent2);">Human in the loop at every gate —</strong>
+      Gate 1: BRD + Guardrail report reviewed and signed off by project sponsor ·
+      <strong style="color:var(--accent2);">Gate 2: Discovery 100% complete + all Critical Gaps resolved</strong>
+      → only then does Phase 03 unlock. Nothing auto-advances.
+    </span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 2 — INPUT TYPES & INTAKE PROCESS
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s2">
+  <div class="lbl">How the pipeline starts — any input type triggers the same process</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a3a1a,#4f6ef7);">📥</div>
+    <h2>Intake &amp; Input Types — SOW · New Requirement · Change Request · Product Brief</h2>
+  </div>
+
+  <div class="g4" style="margin-bottom:11px;">
+    <div class="card in" style="padding:11px 13px;">
+      <div style="font-size:20px;margin-bottom:6px;">📑</div>
+      <strong style="font-size:12px;color:var(--indigo);">Statement of Work (SOW)</strong>
+      <p class="sm" style="margin-top:5px;">Client-signed contract with defined deliverables, timelines, payment milestones.</p>
+      <div class="sep"></div>
+      <p class="sm"><strong style="color:var(--text);">Agent extracts:</strong> scope, deliverables, commercial terms, timeline, acceptance criteria, exclusions.</p>
+    </div>
+    <div class="card ac" style="padding:11px 13px;">
+      <div style="font-size:20px;margin-bottom:6px;">📋</div>
+      <strong style="font-size:12px;color:var(--accent);">New Project Requirement</strong>
+      <p class="sm" style="margin-top:5px;">Fresh requirement from business / product / client with no prior documentation.</p>
+      <div class="sep"></div>
+      <p class="sm"><strong style="color:var(--text);">Agent extracts:</strong> business problem, objectives, users/personas, modules needed, success criteria.</p>
+    </div>
+    <div class="card yw" style="padding:11px 13px;">
+      <div style="font-size:20px;margin-bottom:6px;">🔄</div>
+      <strong style="font-size:12px;color:var(--accent2);">Change Request (CR)</strong>
+      <p class="sm" style="margin-top:5px;">Scope addition or modification to an existing live project or BRD.</p>
+      <div class="sep"></div>
+      <p class="sm"><strong style="color:var(--text);">Agent extracts:</strong> impacted sections, delta scope, effort estimate, risk to existing timeline.</p>
+    </div>
+    <div class="card gr" style="padding:11px 13px;">
+      <div style="font-size:20px;margin-bottom:6px;">💡</div>
+      <strong style="font-size:12px;color:var(--green);">Product / Feature Brief</strong>
+      <p class="sm" style="margin-top:5px;">Internal brief from product team — feature launch, enhancement, or platform upgrade.</p>
+      <div class="sep"></div>
+      <p class="sm"><strong style="color:var(--text);">Agent extracts:</strong> feature spec, user flows, technical dependencies, rollout plan.</p>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">⚡ Intake Agent — What happens when input arrives</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="card" style="padding:9px 13px;display:flex;gap:9px;align-items:flex-start;">
+          <span style="color:var(--accent);font-weight:700;font-size:12px;flex-shrink:0;">01</span>
+          <div><strong style="font-size:11.5px;">Classify input type</strong><p class="sm" style="margin-top:2px;">SOW → extract commercial + scope · Requirement → extract objectives + features · CR → extract delta scope + impact · Brief → extract spec + flows</p></div>
+        </div>
+        <div class="card" style="padding:9px 13px;display:flex;gap:9px;align-items:flex-start;">
+          <span style="color:var(--accent);font-weight:700;font-size:12px;flex-shrink:0;">02</span>
+          <div><strong style="font-size:11.5px;">Extract known answers</strong><p class="sm" style="margin-top:2px;">Agent reads the document and maps content to BRD sections. Every extractable answer is pre-filled. Agent only asks for what is missing.</p></div>
+        </div>
+        <div class="card" style="padding:9px 13px;display:flex;gap:9px;align-items:flex-start;">
+          <span style="color:var(--accent);font-weight:700;font-size:12px;flex-shrink:0;">03</span>
+          <div><strong style="font-size:11.5px;">Ask structured questions (gaps only)</strong><p class="sm" style="margin-top:2px;">5 question sets presented conversationally. Sets not applicable to the project type are skipped. No repeated or redundant questions.</p></div>
+        </div>
+        <div class="card" style="padding:9px 13px;display:flex;gap:9px;align-items:flex-start;">
+          <span style="color:var(--accent);font-weight:700;font-size:12px;flex-shrink:0;">04</span>
+          <div><strong style="font-size:11.5px;">Confirm extracted answers before writing</strong><p class="sm" style="margin-top:2px;">Agent presents a summary of what it understood — PM confirms or corrects. BRD is written only after confirmation.</p></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:8px;">📋 Question Sets — Structured Intake (30 Questions)</p>
+      <table>
+        <thead><tr><th>Set</th><th>Focus Area</th><th>Questions</th><th>When Used</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill pb">A</span></td><td>Project Identity</td><td>Q1–Q6</td><td>Every project</td></tr>
+          <tr><td><span class="pill pb">B</span></td><td>Scope &amp; Constraints</td><td>Q7–Q13</td><td>Every project</td></tr>
+          <tr><td><span class="pill pg">C</span></td><td>Engagement / Channels</td><td>Q14–Q18</td><td>Comms / marketing projects</td></tr>
+          <tr><td><span class="pill po">D</span></td><td>Rewards / Incentives</td><td>Q19–Q23</td><td>Loyalty / e-commerce projects</td></tr>
+          <tr><td><span class="pill pp">E</span></td><td>Tech &amp; Integrations</td><td>Q24–Q30</td><td>Platform / API projects</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:9px;padding:8px 12px;background:rgba(0,198,255,.06);border:1px solid var(--border);border-radius:7px;">
+        <p class="sm"><strong style="color:var(--accent2);">Adapts to project type:</strong> A CRM project skips Set D (Rewards). A platform migration skips Set C (Channels). The agent always skips sets not applicable — never wastes the PM's time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 3 — PHASE 01: BRD STRUCTURE
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s3">
+  <div class="lbl">Phase 01 — Business Requirements Document</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1e5799,#00c6ff);">📄</div>
+    <h2>BRD Structure — 19 Universal Sections · Works for Any Domain · Auto-generates .docx</h2>
+  </div>
+
+  <div class="g2" style="flex:1;gap:14px;">
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">📋 19 BRD Sections — Universal Structure</p>
+      <table>
+        <thead><tr><th>#</th><th>Section</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--muted);">01</td><td>Document Control</td><td>Version, author, status, reviewers</td></tr>
+          <tr><td style="color:var(--muted);">02</td><td>Executive Summary</td><td>Problem, solution, outcomes (3–5 sentences)</td></tr>
+          <tr><td style="color:var(--muted);">03</td><td>Business Objectives</td><td>Revenue / engagement / retention goals</td></tr>
+          <tr><td style="color:var(--muted);">04</td><td>Current State (As-Is)</td><td>Existing system, pain points, gaps</td></tr>
+          <tr><td style="color:var(--muted);">05</td><td>Proposed Solution (To-Be)</td><td>Module / technology mapping table</td></tr>
+          <tr><td style="color:var(--muted);">06</td><td>Scope Definition</td><td>In-scope · Out-of-scope · Assumptions</td></tr>
+          <tr><td style="color:var(--muted);">07</td><td>Functional Requirements</td><td>FR-xxx table · 6-col · Acceptance criteria</td></tr>
+          <tr><td style="color:var(--muted);">08</td><td>Non-Functional Requirements</td><td>NFR-xxx · Measurable targets</td></tr>
+          <tr><td style="color:var(--muted);">09</td><td>Integration Requirements</td><td>APIs · Batch · 3rd-party systems</td></tr>
+          <tr><td style="color:var(--muted);">10</td><td>User Journeys / Process Flows</td><td>Happy path + error paths per use case</td></tr>
+          <tr><td style="color:var(--muted);">11–13</td><td>Phases · Timeline · Risk Register</td><td>Phased delivery · Milestones · Risks</td></tr>
+          <tr><td style="color:var(--accent2);">14</td><td>E2E Journey Flow Diagram</td><td>📊 Visual PNG embedded — always present</td></tr>
+          <tr><td style="color:var(--muted);">15–19</td><td>KPIs · AC · Commercial · Clarifications · Appendix</td><td>Sign-off ready sections</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:2px;">🎯 Requirements Standard — Works for Any Project</p>
+      <div class="card yw" style="padding:10px 13px;">
+        <h3 style="color:var(--accent2);margin-bottom:6px;">FR Table Format (Universal)</h3>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;font-size:9.5px;text-align:center;">
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Req ID</div>
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Module</div>
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Description</div>
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Business Logic</div>
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Priority</div>
+          <div style="background:var(--blue);color:var(--accent);padding:4px;border-radius:3px;font-weight:700;">Dependency</div>
+        </div>
+        <p class="sm" style="margin-top:6px;">Priority: <span class="pill pr">Must Have</span> <span class="pill po">Should Have</span> <span class="pill pb">Nice to Have</span> · Phase tag on every row</p>
+      </div>
+      <div class="card gr" style="padding:10px 13px;">
+        <h3 style="color:var(--green);margin-bottom:6px;">User Story Format (Jira-Ready)</h3>
+        <div style="background:#0d1b2a;border-radius:6px;padding:8px 10px;font-size:10.5px;font-family:'Courier New',monospace;line-height:1.7;">
+          <span style="color:var(--accent2);">As a</span> [role / persona],<br>
+          <span style="color:var(--accent2);">I want</span> [capability / feature],<br>
+          <span style="color:var(--accent2);">so that</span> [business benefit].<br>
+          <span style="color:var(--muted);">Business Rules: · Edge Cases:</span>
+        </div>
+      </div>
+      <div class="card ac" style="padding:10px 13px;">
+        <h3 style="margin-bottom:6px;">📊 E2E Journey Flow Diagram — Section 14</h3>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:5px;">
+          <span style="color:#2E75B6;font-weight:700;">DISCOVER</span>
+          <span style="color:#375623;font-weight:700;">ENGAGE</span>
+          <span style="color:#7030A0;font-weight:700;">TRANSACT</span>
+          <span style="color:#833C00;font-weight:700;">REWARD</span>
+          <span style="color:#1F4E79;font-weight:700;">RETAIN</span>
+        </div>
+        <div style="height:5px;border-radius:3px;background:linear-gradient(90deg,#2E75B6,#375623,#7030A0,#833C00,#1F4E79);margin-bottom:5px;"></div>
+        <p class="sm">Generated via Python + Pillow · 300 DPI PNG · Customised to project lifecycle · Always embedded in Section 14 of every BRD.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 4 — GUARDRAIL FRAMEWORK
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s4">
+  <div class="lbl">🛡️ Guardrail Framework — auto-runs after every BRD · re-runs on every update</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#7b1a1a,#e74c3c);">🛡️</div>
+    <h2>7 Guardrail Categories — Key Gaps Report · Gap IDs · Owner · Due Date · Status Tracking</h2>
+  </div>
+
+  <div class="g3" style="gap:9px;margin-bottom:9px;">
+    <div class="card rd" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">🔲</span><strong style="font-size:11.5px;color:var(--red);">G1 — Scope Boundaries</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>In/out-of-scope explicitly stated</li>
+        <li>Phase tags on every FR row</li>
+        <li>Change control process defined</li>
+        <li>Feature freeze date documented</li>
+        <li>No open TBDs without an owner</li>
+      </ul>
+    </div>
+    <div class="card or" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">💰</span><strong style="font-size:11.5px;color:var(--orange);">G2 — Financial Guardrails</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>Budget documented (range ok)</li>
+        <li>Contingency % defined (10–15%)</li>
+        <li>Cost overrun escalation threshold</li>
+        <li>Funding approval signatory named</li>
+        <li>Commercial model defined</li>
+      </ul>
+    </div>
+    <div class="card yw" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">⚖️</span><strong style="font-size:11.5px;color:var(--accent2);">G3 — Compliance &amp; Regulatory</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>Applicable law assessed (GDPR / PDPA / PCI)</li>
+        <li>Consent / opt-in flows defined</li>
+        <li>PII &amp; PSI data fields tagged</li>
+        <li>Data retention periods set</li>
+        <li>Right to erasure workflow defined</li>
+      </ul>
+    </div>
+    <div class="card gr" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">🎯</span><strong style="font-size:11.5px;color:var(--green);">G4 — SMART KPIs</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>≥ 5 KPIs defined per module</li>
+        <li>Specific numeric targets</li>
+        <li>Time-bound horizon on each KPI</li>
+        <li>Baseline values documented</li>
+        <li>Measurement method defined</li>
+      </ul>
+    </div>
+    <div class="card ac" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">⛓️</span><strong style="font-size:11.5px;color:var(--accent);">G5 — Business Constraints</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>Legacy system dependencies listed</li>
+        <li>Hard deadlines identified</li>
+        <li>Data migration scope defined</li>
+        <li>3rd-party approval timelines noted</li>
+        <li>Cutover / parallel-run strategy set</li>
+      </ul>
+    </div>
+    <div class="card pu" style="padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;"><span style="font-size:16px;">👥</span><strong style="font-size:11.5px;color:var(--purple);">G6 — Resource &amp; Roles</strong></div>
+      <ul class="ck" style="font-size:10.5px;">
+        <li>RACI matrix defined</li>
+        <li>Decision authority documented</li>
+        <li>Escalation path defined</li>
+        <li>Sign-off owners per deliverable</li>
+        <li>Communication cadence set</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- G7 full-width card -->
+  <div class="card" style="border-color:var(--teal);padding:10px 14px;margin-bottom:9px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;">
+    <div style="display:flex;flex-direction:column;gap:4px;min-width:220px;">
+      <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:16px;">🧪</span><strong style="font-size:11.5px;color:var(--teal);">G7 — Test Case Execution</strong><span style="margin-left:6px;" class="pill" style="background:rgba(0,180,160,.15);color:var(--teal);">NEW</span></div>
+      <ul class="ck" style="font-size:10.5px;margin-top:4px;">
+        <li>Every FR traces to ≥1 test case (TC-xxx)</li>
+        <li>Critical workflows have negative + edge cases</li>
+        <li>Every NFR has a performance / security test</li>
+        <li>All test cases executed in UAT before prod</li>
+        <li>Failed tests logged as Jira defects</li>
+        <li>Defects resolved before go-live (or waived)</li>
+      </ul>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+      <div style="background:#0d1b2a;border-radius:7px;padding:7px 10px;border-left:3px solid var(--green);">
+        <p style="font-size:9.5px;font-weight:700;color:var(--green);margin-bottom:3px;">Coverage — 100% Required</p>
+        <p class="sm">Functional flows · Business rules · Error handling · API integrations · Data validation · Security</p>
+      </div>
+      <div style="background:#0d1b2a;border-radius:7px;padding:7px 10px;border-left:3px solid var(--accent);">
+        <p style="font-size:9.5px;font-weight:700;color:var(--accent);margin-bottom:3px;">Test Types Required</p>
+        <p class="sm">Functional · Integration · Negative · Edge Case · Regression · UAT (stakeholder sign-off)</p>
+      </div>
+      <div style="background:#0d1b2a;border-radius:7px;padding:7px 10px;border-left:3px solid var(--accent2);">
+        <p style="font-size:9.5px;font-weight:700;color:var(--accent2);margin-bottom:3px;">Traceability Format</p>
+        <p class="sm">Req ID → TC ID → Scenario → Expected Result → Actual Result → Status → Evidence</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="gap:12px;">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 14px;" class="mono">
+      <div style="color:var(--accent2);font-weight:700;font-size:10.5px;margin-bottom:5px;">📋 KEY GAPS REPORT — auto-output after BRD</div>
+      <div style="font-size:10px;color:var(--red);  line-height:1.8;">[G3-001] 🔴 CRITICAL — GDPR/PDPA applicability not assessed → Owner: [PM] · Due: DD/MM · OPEN</div>
+      <div style="font-size:10px;color:var(--accent2);line-height:1.8;">[G4-001] 🟡 RISK — KPIs: only 2 defined, need ≥5 → Owner: [BA] · Due: DD/MM · OPEN</div>
+      <div style="font-size:10px;color:var(--teal);  line-height:1.8;">[G7-001] 🟡 RISK — FR-003 has no test case linked → Owner: [QA] · Due: DD/MM · OPEN</div>
+      <div style="font-size:10px;color:var(--orange);line-height:1.8;">[G5-002] 🟠 WARNING — Cutover strategy not defined → Owner: [TBD] · OPEN</div>
+      <div style="font-size:10px;color:var(--green); line-height:1.8;margin-top:4px;">✅ G1 PASSED &nbsp; ✅ G2 PASSED &nbsp; ❌ G3: 1 gap &nbsp; ❌ G4: 1 gap &nbsp; ✅ G5 PASSED &nbsp; ✅ G6 PASSED &nbsp; ❌ G7: 1 gap</div>
+    </div>
+    <div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="card" style="padding:8px 12px;display:flex;gap:9px;align-items:center;">
+          <span style="font-size:18px;">🔴</span><div><strong style="font-size:11.5px;">Critical Gap</strong><p class="sm">Must resolve before BRD sign-off (Gate 1). Blocks pipeline advance.</p></div>
+        </div>
+        <div class="card" style="padding:8px 12px;display:flex;gap:9px;align-items:center;">
+          <span style="font-size:18px;">🟡</span><div><strong style="font-size:11.5px;">Risk Item</strong><p class="sm">Must resolve or formally waive before Discovery Gate 2.</p></div>
+        </div>
+        <div class="card" style="padding:8px 12px;display:flex;gap:9px;align-items:center;">
+          <span style="font-size:18px;">🟠</span><div><strong style="font-size:11.5px;">Warning</strong><p class="sm">Assign an owner and proceed. Tracked in Clarification Register.</p></div>
+        </div>
+        <div style="padding:7px 12px;background:rgba(0,198,255,.06);border:1px solid var(--border);border-radius:7px;">
+          <p class="sm"><strong style="color:var(--accent);">Re-run trigger:</strong> Guardrail check re-runs on every BRD update, after Discovery 100%, or on "re-check guardrails" request. G7 re-runs after each UAT cycle completion.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 5 — PHASE 02: DISCOVERY DASHBOARD
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s5">
+  <div class="lbl">Phase 02 — Discovery &amp; Validation Dashboard</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1a4a1a,#27ae60);">🔍</div>
+    <h2>Discovery Dashboard — BRD Auto-Prefilled · Yes/No Quick Confirm · Guardrail Live Panel</h2>
+  </div>
+
+  <div class="g2" style="flex:1;gap:14px;">
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:8px;">Dashboard Structure — 5 Tabs</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="card ac" style="padding:9px 13px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <strong style="font-size:11.5px;">📊 Tab 1 — Discovery Questions</strong>
+            <span class="pill pg">Must Have · Should Have</span>
+          </div>
+          <p class="sm" style="margin-top:4px;">Structured questions by section — prefilled from BRD with hint text. Remaining open items flagged. Progress bar per section.</p>
+        </div>
+        <div class="card gr" style="padding:9px 13px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <strong style="font-size:11.5px;">🧩 Tab 2 — Solution &amp; Module Mapping</strong>
+            <span class="pill pg">At least 1 module required</span>
+          </div>
+          <p class="sm" style="margin-top:4px;">Confirms which technologies/modules are in scope. Links modules to FR sections. Validates solution approach.</p>
+        </div>
+        <div class="card yw" style="padding:9px 13px;border-width:2px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <strong style="font-size:11.5px;">✅ Tab 3 — Yes / No Quick Confirm  <span style="color:var(--green);font-size:10px;">← NEW</span></strong>
+            <span class="pill po">~50 binary questions</span>
+          </div>
+          <p class="sm" style="margin-top:4px;">Auto-prefilled from BRD. Each question pre-answered Yes/No with source hint. Stakeholder clicks to confirm. Ambiguous items flagged ❓ — blocks Gate 2 until resolved.</p>
+        </div>
+        <div class="card pu" style="padding:9px 13px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <strong style="font-size:11.5px;">🗂️ Tab 4 — BRD Coverage Map</strong>
+            <span class="pill pp">All 19 sections ≥ partial</span>
+          </div>
+          <p class="sm" style="margin-top:4px;">Visual heatmap of BRD section coverage. Red = missing · Yellow = partial · Green = complete. Gate 2 requires all sections ≥ partial.</p>
+        </div>
+        <div class="card rd" style="padding:9px 13px;border-width:2px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <strong style="font-size:11.5px;">🛡️ Tab 5 — Guardrail Status  <span style="color:var(--green);font-size:10px;">← NEW</span></strong>
+            <span class="pill pr">Criticals must be 0</span>
+          </div>
+          <p class="sm" style="margin-top:4px;">Live status of all 6 guardrail categories. Each gap: owner field + due date picker + status dropdown (Open / In Progress / Resolved / Waived). Gate 2 locked until all 🔴 resolved.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:2px;">✅ Yes / No Quick Confirm — Worked Example</p>
+      <div style="background:#0d1b2a;border:1px solid var(--border);border-radius:9px;padding:11px 14px;font-size:10.5px;display:flex;flex-direction:column;gap:7px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--card);border-radius:6px;border-left:3px solid var(--green);">
+          <span style="flex:1;">Is SMS required as a communication channel?</span>
+          <span style="color:var(--muted);font-size:9.5px;margin:0 8px;">(From BRD: "SMS listed as primary channel")</span>
+          <span style="background:rgba(39,174,96,.2);color:var(--green);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">✅ YES — Confirmed</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--card);border-radius:6px;border-left:3px solid var(--accent2);">
+          <span style="flex:1;">Is data migration from legacy CRM required?</span>
+          <span style="color:var(--muted);font-size:9.5px;margin:0 8px;">(From BRD: "existing CRM to be decommissioned")</span>
+          <span style="background:rgba(240,180,41,.2);color:var(--accent2);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">✅ YES — Pre-filled</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--card);border-radius:6px;border-left:3px solid var(--red);">
+          <span style="flex:1;">Is LINE integration required?</span>
+          <span style="color:var(--muted);font-size:9.5px;margin:0 8px;">(Not mentioned in BRD — needs input)</span>
+          <span style="background:rgba(231,76,60,.15);color:var(--red);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">❓ Needs Confirmation</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--card);border-radius:6px;border-left:3px solid var(--red);">
+          <span style="flex:1;">Is PCI-DSS compliance required?</span>
+          <span style="color:var(--muted);font-size:9.5px;margin:0 8px;">(Payment data mentioned but scope unclear)</span>
+          <span style="background:rgba(231,76,60,.15);color:var(--red);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">❓ Needs Confirmation</span>
+        </div>
+      </div>
+      <div class="card" style="padding:10px 13px;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:6px;">What "100% Complete" means</p>
+        <ul class="ck" style="font-size:11px;">
+          <li>All Must-Have questions answered (status ≠ Pending)</li>
+          <li>All Yes/No items confirmed — zero ❓ remaining</li>
+          <li>At least 1 module confirmed in Solution tab</li>
+          <li>BRD coverage map: all 19 sections ≥ partial</li>
+          <li>Guardrail tab: zero 🔴 Critical gaps open</li>
+          <li>Open Questions Register: all items have owner + due date</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 6 — PHASE 03: DELIVERY PLANNING & JIRA
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s6">
+  <div class="lbl">Phase 03 — Delivery Planning · Jira Tickets · Sprint Backlog</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#2a1a3a,#a855f7);">🎯</div>
+    <h2>Delivery Planning — Epics · User Stories · Story Points · Jira API Push · CSV / XLSX Export</h2>
+  </div>
+
+  <div class="g2" style="flex:1;gap:14px;">
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--purple);margin-bottom:8px;">Ticket Hierarchy — Universal Structure</p>
+      <svg viewBox="0 0 440 215" style="width:100%;max-height:210px;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="jp" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#a855f7"/></marker>
+          <marker id="jg" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#27ae60"/></marker>
+          <marker id="ja" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#00c6ff"/></marker>
+        </defs>
+        <!-- BRD In -->
+        <rect x="4" y="88" width="90" height="40" rx="6" fill="#162433" stroke="#f0b429" stroke-width="1.5"/>
+        <text x="49" y="105" text-anchor="middle" fill="#f0b429" font-size="9.5" font-weight="700" font-family="Segoe UI,sans-serif">BRD Approved</text>
+        <text x="49" y="119" text-anchor="middle" fill="#8fa3b8" font-size="8.5" font-family="Segoe UI,sans-serif">Discovery 100%</text>
+        <line x1="94" y1="108" x2="116" y2="108" stroke="#f0b429" stroke-width="1.2" marker-end="url(#jp)"/>
+        <!-- Jira discovery -->
+        <rect x="118" y="66" width="106" height="84" rx="7" fill="#1a0f2e" stroke="#a855f7" stroke-width="1.3"/>
+        <text x="171" y="83" text-anchor="middle" fill="#a855f7" font-size="8.5" font-weight="700" font-family="Segoe UI,sans-serif">Jira API Discovery</text>
+        <line x1="130" y1="91" x2="217" y2="91" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="130" y="102" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">→ cloudId + project key</text>
+        <text x="130" y="115" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">→ issue type meta</text>
+        <text x="130" y="128" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">→ components / priorities</text>
+        <text x="130" y="141" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">→ sprint + fix version</text>
+        <line x1="224" y1="108" x2="246" y2="108" stroke="#a855f7" stroke-width="1.2" marker-end="url(#jp)"/>
+        <!-- Epic/Story tree -->
+        <rect x="248" y="4" width="188" height="207" rx="8" fill="#1a0f2e" stroke="#a855f7" stroke-width="1.3"/>
+        <text x="342" y="21" text-anchor="middle" fill="#a855f7" font-size="9" font-weight="700" font-family="Segoe UI,sans-serif">TICKET HIERARCHY</text>
+        <rect x="256" y="28" width="172" height="20" rx="4" fill="#2a1a3a" stroke="#a855f7" stroke-width="1"/>
+        <text x="342" y="42" text-anchor="middle" fill="#a855f7" font-size="8.5" font-family="Segoe UI,sans-serif">📦 Epic — per functional domain</text>
+        <line x1="262" y1="48" x2="262" y2="205" stroke="#a855f7" stroke-width="0.6" stroke-dasharray="2,2"/>
+        <rect x="270" y="54"  width="158" height="17" rx="3" fill="#1a2030" stroke="#27ae60" stroke-width="0.8"/>
+        <text x="349" y="66" text-anchor="middle" fill="#27ae60" font-size="8" font-family="Segoe UI,sans-serif">📝 Story — [FR-xxx] Summary &lt;100 chars</text>
+        <rect x="270" y="76"  width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="88" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">👤 As a / I want / so that format</text>
+        <rect x="270" y="98"  width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="110" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">✅ Acceptance Criteria (per FR)</text>
+        <rect x="270" y="120" width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="132" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">📊 Story Points — Fibonacci 1/2/3/5/8/13</text>
+        <rect x="270" y="142" width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="154" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">🏷️ Priority · Label · Component · Phase</text>
+        <rect x="270" y="164" width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="176" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">🗓️ Sprint · Fix Version · Reporter</text>
+        <rect x="270" y="186" width="158" height="17" rx="3" fill="#1a2030" stroke="#2a4057" stroke-width="0.6"/>
+        <text x="349" y="198" text-anchor="middle" fill="#8fa3b8" font-size="8" font-family="Segoe UI,sans-serif">👤 Assignee · Environment · GeoRegion</text>
+        <!-- connectors -->
+        <line x1="262" y1="63"  x2="270" y2="63"  stroke="#27ae60" stroke-width="0.8"/>
+        <line x1="262" y1="85"  x2="270" y2="85"  stroke="#2a4057" stroke-width="0.6"/>
+        <line x1="262" y1="107" x2="270" y2="107" stroke="#2a4057" stroke-width="0.6"/>
+        <line x1="262" y1="129" x2="270" y2="129" stroke="#2a4057" stroke-width="0.6"/>
+        <line x1="262" y1="151" x2="270" y2="151" stroke="#2a4057" stroke-width="0.6"/>
+        <line x1="262" y1="173" x2="270" y2="173" stroke="#2a4057" stroke-width="0.6"/>
+        <line x1="262" y1="195" x2="270" y2="195" stroke="#2a4057" stroke-width="0.6"/>
+      </svg>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:2px;">📤 Delivery Options &amp; Story Point Guide</p>
+      <div class="g2" style="gap:8px;">
+        <div class="card pu" style="padding:9px 12px;">
+          <h3 style="color:var(--purple);margin-bottom:5px;">Option A — Jira API Push</h3>
+          <ul class="ck" style="font-size:10.5px;">
+            <li>Live Jira board update</li>
+            <li>Epics first, then stories</li>
+            <li>Progress: every 5 tickets</li>
+            <li>Full field mapping dynamic</li>
+          </ul>
+        </div>
+        <div class="card gr" style="padding:9px 12px;">
+          <h3 style="color:var(--green);margin-bottom:5px;">Option B — CSV + XLSX Export</h3>
+          <ul class="ck" style="font-size:10.5px;">
+            <li>Jira-standard CSV headers</li>
+            <li>3-sheet styled XLSX</li>
+            <li>Colour-coded by Epic</li>
+            <li>Confluence upload ready</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card yw" style="padding:9px 13px;">
+        <h3 style="color:var(--accent2);margin-bottom:6px;">📊 Story Point Guide (Fibonacci)</h3>
+        <table style="font-size:10px;">
+          <thead><tr><th>Points</th><th>Complexity</th><th>Typical Work</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td>Trivial</td><td>Config toggle, copy change</td></tr>
+            <tr><td><strong>2</strong></td><td>Simple</td><td>Single API call, minor UI</td></tr>
+            <tr><td><strong>3</strong></td><td>Standard</td><td>One integration + validation</td></tr>
+            <tr><td><strong>5</strong></td><td>Medium</td><td>Multi-step flow, conditional logic</td></tr>
+            <tr><td><strong>8</strong></td><td>Complex</td><td>Multi-system, async, retry logic</td></tr>
+            <tr><td><strong>13</strong></td><td>Very complex</td><td>Full subsystem — split if possible</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="padding:9px 12px;">
+        <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:5px;">Epic Naming — Good vs Bad</p>
+        <div class="g2" style="gap:6px;">
+          <div>
+            <p class="sm" style="color:var(--green);font-weight:700;margin-bottom:3px;">✅ Good</p>
+            <p class="sm">User Registration &amp; Onboarding</p>
+            <p class="sm">Core Transaction Processing</p>
+            <p class="sm">Admin Config &amp; Reporting</p>
+          </div>
+          <div>
+            <p class="sm" style="color:var(--red);font-weight:700;margin-bottom:3px;">✗ Avoid</p>
+            <p class="sm">FR-001 to FR-010</p>
+            <p class="sm">Phase 1</p>
+            <p class="sm">All Features</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 7 — GATE RULES · CONFLUENCE · BENEFITS
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s7">
+  <div class="lbl">Gate Rules · Project Repository · Pipeline Benefits · Reuse Guide</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#1a4a2a,#00b4a0);">🔒</div>
+    <h2>Gate Checklists · Universal Repository Structure · How to Reuse for Any New Project</h2>
+  </div>
+
+  <div class="g3" style="flex:1;gap:11px;">
+    <!-- Gates -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:2px;">🔒 Gate Checklists</p>
+      <div class="card yw" style="padding:10px 13px;">
+        <div style="font-size:11.5px;font-weight:700;color:var(--accent2);margin-bottom:6px;">GATE 1 — Phase 01 → Phase 02</div>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>All 19 BRD sections populated</li>
+          <li>Guardrail Key Gaps Report shared</li>
+          <li>All 🔴 Critical Gaps resolved</li>
+          <li>BRD reviewed by project sponsor</li>
+          <li>Sign-off saved to repository</li>
+          <li>BRD confirmed as v1.0 Approved</li>
+        </ul>
+      </div>
+      <div class="card gr" style="padding:10px 13px;">
+        <div style="font-size:11.5px;font-weight:700;color:var(--green);margin-bottom:6px;">GATE 2 — Phase 02 → Phase 03</div>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Discovery 100% Must-Have complete</li>
+          <li>Yes/No section: 100% confirmed</li>
+          <li>🔴 Criticals + 🟡 Risks resolved / waived</li>
+          <li>Guardrail Scorecard exported</li>
+          <li>BRD updated to vX.X</li>
+          <li>Open Questions Register cleared</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Repository -->
+    <div>
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:6px;">📁 Universal Project Repository</p>
+      <div class="card tl mono" style="padding:11px 14px;font-size:10.5px;line-height:1.85;">
+        <div style="color:var(--teal);font-weight:700;">📁 [Project Name] — Root Space</div>
+        <div style="padding-left:12px;color:var(--accent);">├── 📋 BRD Documents</div>
+        <div style="padding-left:24px;color:var(--muted);">[Client]_BRD_v1.0.docx</div>
+        <div style="padding-left:24px;color:var(--muted);">[Client]_BRD_vX.X_revised.docx</div>
+        <div style="padding-left:24px;color:var(--muted);">Key_Gaps_Report.txt</div>
+        <div style="padding-left:12px;color:var(--green);">├── 🔍 Discovery Documents</div>
+        <div style="padding-left:24px;color:var(--muted);">[Client]_Discovery_Dashboard.html</div>
+        <div style="padding-left:24px;color:var(--muted);">Open_Questions_Register.xlsx</div>
+        <div style="padding-left:24px;color:var(--muted);">Guardrail_Scorecard.txt</div>
+        <div style="padding-left:12px;color:var(--purple);">├── 🎯 Delivery Backlog</div>
+        <div style="padding-left:24px;color:var(--muted);">[Client]_Jira_Import.csv</div>
+        <div style="padding-left:24px;color:var(--muted);">[Client]_Epics_Stories.xlsx</div>
+        <div style="padding-left:24px;color:var(--muted);">Sprint_Plan.xlsx</div>
+        <div style="padding-left:12px;color:var(--accent2);">├── 👥 Stakeholder Docs</div>
+        <div style="padding-left:24px;color:var(--muted);">RACI_Matrix.docx · Sign_Off_Records.docx</div>
+        <div style="padding-left:12px;color:var(--orange);">└── ⚙️ Technical Specs</div>
+        <div style="padding-left:24px;color:var(--muted);">Integration_Specs.docx · Config_Map.xlsx</div>
+      </div>
+    </div>
+
+    <!-- Reuse + Benefits -->
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:2px;">🔁 How to Reuse for Any New Project</p>
+      <div class="card" style="padding:9px 12px;display:flex;gap:9px;">
+        <span style="font-size:16px;flex-shrink:0;">1️⃣</span>
+        <div><strong style="font-size:11px;">Upload your input</strong><p class="sm" style="margin-top:2px;">Drop in SOW, requirement doc, CR, or brief. Agent classifies and extracts automatically.</p></div>
+      </div>
+      <div class="card" style="padding:9px 12px;display:flex;gap:9px;">
+        <span style="font-size:16px;flex-shrink:0;">2️⃣</span>
+        <div><strong style="font-size:11px;">Answer only what's missing</strong><p class="sm" style="margin-top:2px;">Agent presents only the question sets applicable to your project type. Pre-filled answers are confirmed, not re-asked.</p></div>
+      </div>
+      <div class="card" style="padding:9px 12px;display:flex;gap:9px;">
+        <span style="font-size:16px;flex-shrink:0;">3️⃣</span>
+        <div><strong style="font-size:11px;">Review BRD + Guardrail report</strong><p class="sm" style="margin-top:2px;">BRD + Key Gaps Report generated. Resolve Criticals → sign off → Gate 1 passes.</p></div>
+      </div>
+      <div class="card" style="padding:9px 12px;display:flex;gap:9px;">
+        <span style="font-size:16px;flex-shrink:0;">4️⃣</span>
+        <div><strong style="font-size:11px;">Confirm discovery dashboard</strong><p class="sm" style="margin-top:2px;">Yes/No panel pre-filled. Confirm or correct. Guardrail tab clears. Gate 2 unlocks.</p></div>
+      </div>
+      <div class="card pu" style="padding:9px 12px;display:flex;gap:9px;">
+        <span style="font-size:16px;flex-shrink:0;">5️⃣</span>
+        <div><strong style="font-size:11px;color:var(--purple);">Push to Jira — live board ready</strong><p class="sm" style="margin-top:2px;">Epics and stories created. Sprint plan exported. Project is delivery-ready.</p></div>
+      </div>
+      <div style="padding:7px 11px;background:rgba(0,198,255,.06);border:1px solid var(--border);border-radius:7px;">
+        <p class="sm"><strong style="color:var(--accent2);">Works for:</strong> Loyalty · CRM · E-commerce · ERP · Mobile Apps · Data Platforms · SaaS · Internal Tools · Integrations · Any client, any domain.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════
+     SLIDE 8 — G7: TEST CASE EXECUTION GUARDRAIL
+══════════════════════════════════════════════════════════ -->
+<section class="slide" id="s8">
+  <div class="lbl">🛡️ Guardrail 7 — Test Case Execution · Quality Gate before every Go-Live</div>
+  <div class="hdr">
+    <div class="icon" style="background:linear-gradient(135deg,#0a3a3a,#00b4a0);">🧪</div>
+    <h2>G7 — Test Case Execution: Traceability · Coverage · Test Types · Execution Governance</h2>
+  </div>
+
+  <div class="g3" style="gap:11px;flex:1;">
+
+    <!-- LEFT: Traceability + Design Structure -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:2px;">📐 Objective &amp; Traceability</p>
+      <div class="card tl" style="padding:10px 13px;">
+        <h3 style="color:var(--teal);margin-bottom:6px;">Why G7 exists</h3>
+        <p class="sm" style="line-height:1.7;">Every FR and NFR in the BRD must be validated by structured test cases before deployment. G7 enforces <strong style="color:var(--text);">traceability, completeness, and quality assurance</strong> across the full implementation lifecycle — ensuring no requirement ships untested.</p>
+      </div>
+      <div class="card tl" style="padding:10px 13px;">
+        <h3 style="color:var(--teal);margin-bottom:7px;">📊 Traceability Matrix (FR → TC)</h3>
+        <table style="font-size:10px;">
+          <thead>
+            <tr><th>Req ID</th><th>TC ID</th><th>Scenario</th><th>Result</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td style="color:var(--accent);">FR-001</td><td>TC-001</td><td>Valid registration flow</td><td>Registered ✓</td><td><span class="pill pg">Pass</span></td></tr>
+            <tr><td style="color:var(--accent);">FR-001</td><td>TC-002</td><td>Missing mandatory field</td><td>Error shown ✓</td><td><span class="pill pg">Pass</span></td></tr>
+            <tr><td style="color:var(--accent);">FR-002</td><td>TC-003</td><td>Points earn on transaction</td><td>Points awarded ✓</td><td><span class="pill pg">Pass</span></td></tr>
+            <tr><td style="color:var(--red);">FR-005</td><td>—</td><td style="color:var(--red);">No test case linked</td><td>—</td><td><span class="pill pr">🔴 Gap</span></td></tr>
+          </tbody>
+        </table>
+        <p class="sm" style="margin-top:6px;color:var(--red);">🔴 G7-001: FR-005 has no linked test case — must assign QA owner before Gate 2.</p>
+      </div>
+      <div class="card" style="padding:10px 13px;">
+        <h3 style="color:var(--accent2);margin-bottom:6px;">📋 Test Case Standard Fields</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;">
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">TC ID</span> — Unique identifier</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Req ID</span> — Linked FR/NFR</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Scenario</span> — What is tested</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Preconditions</span> — System state</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Test Steps</span> — Step by step</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Expected Result</span> — Outcome</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Actual Result</span> — Observed</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;"><span style="color:var(--accent);">Status</span> — Pass / Fail</div>
+          <div style="background:#0d1b2a;padding:4px 7px;border-radius:4px;grid-column:span 2;"><span style="color:var(--accent);">Evidence</span> — Screenshots or logs attached</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDDLE: Coverage Rules -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:2px;">✅ Mandatory Coverage Rules</p>
+      <div class="card gr" style="padding:10px 13px;">
+        <h3 style="color:var(--green);margin-bottom:7px;">Coverage Requirements</h3>
+        <table style="font-size:10.5px;">
+          <thead><tr><th>Category</th><th>Required</th></tr></thead>
+          <tbody>
+            <tr><td>Functional Flows</td><td><span class="pill pg">100%</span></td></tr>
+            <tr><td>Business Rules</td><td><span class="pill pg">100%</span></td></tr>
+            <tr><td>Error Handling</td><td><span class="pill pg">Mandatory</span></td></tr>
+            <tr><td>API Integrations</td><td><span class="pill pg">Mandatory</span></td></tr>
+            <tr><td>Data Validation</td><td><span class="pill pg">Mandatory</span></td></tr>
+            <tr><td>Security</td><td><span class="pill pg">Mandatory</span></td></tr>
+            <tr><td>Performance</td><td><span class="pill po">High-volume flows</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="padding:10px 13px;">
+        <h3 style="color:var(--accent);margin-bottom:7px;">📌 Traceability Rules</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>Every FR → minimum 1 positive test case</li>
+          <li>Every critical workflow → negative + edge case</li>
+          <li>Every NFR → performance or security test</li>
+          <li>100% FR coverage before Gate 2 sign-off</li>
+          <li>Traceability matrix stored in Confluence</li>
+        </ul>
+      </div>
+      <div style="padding:8px 12px;background:rgba(0,180,160,.07);border:1px solid var(--teal);border-radius:7px;">
+        <p style="font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px;">🔄 G7 Re-run Triggers</p>
+        <p class="sm">Re-runs after: BRD FR update · New UAT cycle · Defect resolution batch · Go-live checklist · User request "re-check G7".</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: Test Types + Governance -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <p style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);margin-bottom:2px;">🔬 Test Types + Execution Governance</p>
+      <div class="card yw" style="padding:10px 13px;">
+        <h3 style="color:var(--accent2);margin-bottom:7px;">6 Required Test Types</h3>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(0,198,255,.15);color:var(--accent);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">1</span>
+            <div><strong style="font-size:11px;">Functional Testing</strong><p class="sm" style="margin-top:1px;">Validates system behaviour vs BRD business requirements.</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(39,174,96,.15);color:var(--green);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">2</span>
+            <div><strong style="font-size:11px;">Integration Testing</strong><p class="sm" style="margin-top:1px;">Ensures correct communication between all connected systems.</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(231,76,60,.15);color:var(--red);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">3</span>
+            <div><strong style="font-size:11px;">Negative Testing</strong><p class="sm" style="margin-top:1px;">Tests invalid inputs, missing fields, and error conditions.</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(230,126,34,.15);color:var(--orange);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">4</span>
+            <div><strong style="font-size:11px;">Edge Case Testing</strong><p class="sm" style="margin-top:1px;">Validates boundary conditions and extreme input values.</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(168,85,247,.15);color:var(--purple);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">5</span>
+            <div><strong style="font-size:11px;">Regression Testing</strong><p class="sm" style="margin-top:1px;">Ensures existing functionality is unaffected by new changes.</p></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <span style="background:rgba(0,180,160,.15);color:var(--teal);border-radius:4px;padding:2px 6px;font-size:9.5px;font-weight:700;flex-shrink:0;">6</span>
+            <div><strong style="font-size:11px;">UAT — User Acceptance Testing</strong><p class="sm" style="margin-top:1px;">Final validation by business stakeholders before go-live.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="card rd" style="padding:10px 13px;">
+        <h3 style="color:var(--red);margin-bottom:7px;">⚖️ Execution Governance Rules</h3>
+        <ul class="ck" style="font-size:10.5px;">
+          <li>All tests run in UAT env before production</li>
+          <li>All Critical + High priority TCs must pass</li>
+          <li>Failed TCs logged as Jira defects immediately</li>
+          <li>Defects resolved before go-live</li>
+          <li class="wd">Exceptions require PM + sponsor formal waiver</li>
+          <li>Go-live sign-off only after QA lead approval</li>
+        </ul>
+        <div style="margin-top:7px;padding:6px 10px;background:rgba(231,76,60,.08);border-radius:6px;">
+          <p class="sm"><strong style="color:var(--red);">Gap flags:</strong> 🔴 FR with no TC linked · 🔴 0% coverage on mandatory category · 🟡 UAT not signed off · 🟠 Evidence not attached to failed TC</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button onclick="go(-1)">← Prev</button>
+  <span class="counter" id="counter">1 / 1</span>
+  <button onclick="go(1)">Next →</button>
+</div>
+<div class="progress" id="bar"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  let cur = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' on' : '');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  });
+
+  function sync() {
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+    document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+    document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+  }
+
+  function goTo(n) {
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('prev');
+    cur = Math.max(0, Math.min(slides.length - 1, n));
+    slides[cur].classList.add('active');
+    sync();
+    setTimeout(() => slides.forEach(s => { if (!s.classList.contains('active')) s.classList.remove('prev'); }), 360);
+  }
+
+  function go(d) { goTo(cur + d); }
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); go(-1); }
+  });
+
+  sync();
+</script>
+</body>
+</html>
