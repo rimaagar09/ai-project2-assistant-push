@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RWS XploreRWS — Discovery Dashboard</title>
+<style>
+:root{
+  --bg:#0d1b2a;--card:#162433;--card2:#1a2d3e;--card3:#1e3348;--border:#2a4057;--border2:#1e3450;
+  --text:#e8edf2;--muted:#8fa3b8;--dim:#3a5570;
+  --blue:#00c6ff;--blue-bg:rgba(0,198,255,.09);
+  --green:#27ae60;--green-bg:rgba(39,174,96,.1);
+  --red:#e74c3c;--red-bg:rgba(231,76,60,.1);
+  --orange:#e67e22;--orange-bg:rgba(230,126,34,.1);
+  --yellow:#f0b429;--yellow-bg:rgba(240,180,41,.1);
+  --purple:#a855f7;--purple-bg:rgba(168,85,247,.09);
+  --teal:#00b4a0;--teal-bg:rgba(0,180,160,.09);
+  --pink:#ec4899;--pink-bg:rgba(236,72,153,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── TOP NAV ── */
+.topbar{position:sticky;top:0;z-index:300;background:rgba(13,27,42,.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;padding:0 22px;}
+.tb-logo{font-size:11px;font-weight:800;color:var(--blue);letter-spacing:1px;padding:14px 0;margin-right:20px;}
+.tab-btn{padding:14px 14px;font-size:11px;font-weight:700;cursor:pointer;border-bottom:2.5px solid transparent;
+  transition:all .2s;color:var(--muted);white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.progress-pill{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:10.5px;display:flex;align-items:center;gap:6px;}
+.prog-bar{width:80px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--yellow));border-radius:3px;transition:width .4s;}
+
+/* ── LAYOUT ── */
+.page{display:none;padding:20px 26px 40px;}
+.page.active{display:block;}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:20px;}
+.sec-hdr:first-child{margin-top:0;}
+.sec-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sec-title{font-size:13px;font-weight:800;letter-spacing:.3px;}
+.sec-count{font-size:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  padding:1px 8px;color:var(--muted);}
+
+/* ── CARDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.wcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+  transition:border-color .2s;}
+.wcard:hover{border-color:var(--border2);}
+.wcard-hdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.wcard-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.wcard-title{font-size:11.5px;font-weight:700;line-height:1.3;flex:1;}
+.wcard-body{font-size:10.5px;color:var(--muted);line-height:1.55;}
+.wcard-footer{margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+
+/* ── STATUS BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;
+  font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;}
+.badge.in-brd{background:var(--green-bg);color:var(--green);border:1px solid rgba(39,174,96,.3);}
+.badge.not-in-brd{background:var(--red-bg);color:var(--red);border:1px solid rgba(231,76,60,.3);}
+.badge.partial{background:var(--orange-bg);color:var(--orange);border:1px solid rgba(230,126,34,.3);}
+.badge.gap{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(240,180,41,.3);}
+.badge.out-scope{background:rgba(138,150,160,.1);color:var(--muted);border:1px solid var(--border);}
+.cat-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:8px;font-size:9.5px;font-weight:700;}
+
+/* ── YES/NO CONFIRM ── */
+.yn-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;
+  background:var(--card2);border:1px solid var(--border);margin-bottom:6px;transition:background .15s;}
+.yn-row:hover{background:var(--card3);}
+.yn-q{flex:1;font-size:10.5px;line-height:1.4;}
+.yn-btns{display:flex;gap:5px;flex-shrink:0;}
+.yn-btn{padding:4px 12px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;}
+.yn-btn:hover{border-color:var(--blue);color:var(--blue);}
+.yn-btn.yes-sel{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.yn-btn.no-sel{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.yn-btn.partial-sel{background:var(--orange-bg);border-color:var(--orange);color:var(--orange);}
+
+/* ── GAP TABLE ── */
+.gap-row{display:grid;grid-template-columns:28px 1fr 100px 90px 90px;gap:8px;
+  align-items:start;padding:8px 10px;border-radius:7px;margin-bottom:5px;
+  background:var(--card);border:1px solid var(--border);}
+.gap-row.cr{border-left:3px solid var(--red);}
+.gap-row.wa{border-left:3px solid var(--orange);}
+.gap-row.ni{border-left:3px solid var(--yellow);}
+.gap-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:9.5px;font-weight:800;flex-shrink:0;}
+
+/* ── SUMMARY STATS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:18px;}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:9px;
+  padding:12px 10px;text-align:center;}
+.stat-n{font-size:24px;font-weight:900;line-height:1;}
+.stat-l{font-size:9.5px;color:var(--muted);margin-top:3px;}
+
+/* ── NOTES ── */
+.note-area{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;color:var(--text);font-size:10.5px;font-family:'Segoe UI',sans-serif;
+  resize:vertical;min-height:56px;margin-top:5px;}
+.note-area:focus{outline:none;border-color:var(--blue);}
+
+/* ── PRIORITY TOGGLE ── */
+.pri-sel{display:flex;gap:4px;margin-top:6px;}
+.pri-btn{padding:2px 9px;border-radius:5px;font-size:9.5px;font-weight:700;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;}
+.pri-btn.p-must{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.pri-btn.p-should{background:var(--orange-bg);border-color:var(--orange);color:var(--orange);}
+.pri-btn.p-nice{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow);}
+.pri-btn.p-oos{background:rgba(138,150,160,.1);border-color:var(--dim);color:var(--muted);}
+
+/* ── SCROLL ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.sm{font-size:10.5px;color:var(--muted);}
+table{width:100%;border-collapse:collapse;}
+th{background:#1a3a5c;color:var(--blue);padding:6px 10px;text-align:left;font-size:10.5px;font-weight:700;}
+td{padding:5px 10px;border-bottom:1px solid var(--border);font-size:10.5px;vertical-align:top;}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="tb-logo">🏝 RWS XploreRWS · Discovery Dashboard</div>
+  <div class="tab-btn active" onclick="showTab('overview',this)">📊 Overview</div>
+  <div class="tab-btn" onclick="showTab('wishlist',this)">📋 Wishlist (21 Items)</div>
+  <div class="tab-btn" onclick="showTab('quickconfirm',this)">⚡ Quick Confirm</div>
+  <div class="tab-btn" onclick="showTab('gaps',this)">🚨 Gap Register</div>
+  <div class="tab-btn" onclick="showTab('brd',this)">📄 BRD Coverage</div>
+  <div class="topbar-right">
+    <div class="progress-pill">
+      <span style="font-size:10px;color:var(--muted);">Coverage</span>
+      <div class="prog-bar"><div class="prog-fill" id="mainprog" style="width:38%;"></div></div>
+      <span style="font-size:10.5px;font-weight:700;color:var(--yellow);" id="progpct">38%</span>
+    </div>
+    <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--red);">⚠ 13 Gaps</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  TAB 1: OVERVIEW                                   -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page active" id="tab-overview">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);">Resort World Sentosa · Non-Gaming Loyalty Program · SessionM Platform</div>
+      <h1 style="font-size:22px;font-weight:900;margin-top:3px;">Wishlist Discovery Dashboard</h1>
+      <p class="sm" style="margin-top:3px;">21 wishlist items across 7 categories · Pre-filled from RWS_Wishlist.xlsx · v1.0</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:8px;padding:8px 16px;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:var(--green);">8</div>
+        <div style="font-size:9px;color:var(--muted);">In BRD</div>
+      </div>
+      <div style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;padding:8px 16px;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:var(--orange);">5</div>
+        <div style="font-size:9px;color:var(--muted);">Partial</div>
+      </div>
+      <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:8px;padding:8px 16px;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:var(--red);">13</div>
+        <div style="font-size:9px;color:var(--muted);">Gaps / Missing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat row -->
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-n" style="color:var(--blue);">21</div><div class="stat-l">Total Wishlist Items</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--purple);">7</div><div class="stat-l">Categories</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--green);">8</div><div class="stat-l">In Current BRD</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--orange);">5</div><div class="stat-l">Partially Covered</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--red);">8</div><div class="stat-l">Not in BRD</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--yellow);">38%</div><div class="stat-l">BRD Coverage</div></div>
+  </div>
+
+  <!-- Category breakdown -->
+  <div class="grid2" style="gap:11px;margin-bottom:14px;">
+    <div class="wcard">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;letter-spacing:.5px;">CATEGORY BREAKDOWN</div>
+      <table style="font-size:10.5px;">
+        <thead><tr><th>Category</th><th>Items</th><th>In BRD</th><th>Gaps</th></tr></thead>
+        <tbody>
+          <tr><td><span style="color:var(--red);font-weight:700;">Programme Rules</span></td><td>7</td><td><span style="color:var(--orange);">2 partial</span></td><td><span style="color:var(--red);">5 gaps</span></td></tr>
+          <tr><td><span style="color:var(--blue);font-weight:700;">Member Services</span></td><td>4</td><td><span style="color:var(--green);">2 in BRD</span></td><td><span style="color:var(--orange);">2 partial</span></td></tr>
+          <tr><td><span style="color:var(--teal);font-weight:700;">Data</span></td><td>1</td><td>—</td><td><span style="color:var(--red);">1 gap</span></td></tr>
+          <tr><td><span style="color:var(--purple);font-weight:700;">Campaigns</span></td><td>4</td><td><span style="color:var(--green);">1 in BRD</span></td><td><span style="color:var(--red);">3 gaps</span></td></tr>
+          <tr><td><span style="color:var(--yellow);font-weight:700;">Bulk Issuance</span></td><td>1</td><td>—</td><td><span style="color:var(--red);">1 gap</span></td></tr>
+          <tr><td><span style="color:var(--pink);font-weight:700;">Gamification</span></td><td>1</td><td>—</td><td><span style="color:var(--red);">1 gap</span></td></tr>
+          <tr><td><span style="color:var(--orange);font-weight:700;">Marketing Comms</span></td><td>1</td><td><span style="color:var(--green);">1 in BRD</span></td><td>—</td></tr>
+          <tr><td><span style="color:var(--blue);font-weight:700;">Referral</span></td><td>2</td><td>—</td><td><span style="color:var(--red);">1 gap (dup)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wcard">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);margin-bottom:10px;letter-spacing:.5px;">CRITICAL GAPS — NOT IN CURRENT BRD</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="background:var(--red-bg);border-left:3px solid var(--red);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--red);">🔴 Fraud Detection &amp; Prevention</p>
+          <p class="sm">Real-time anomaly detection, alerts, suspension — entirely absent from BRD</p>
+        </div>
+        <div style="background:var(--red-bg);border-left:3px solid var(--red);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--red);">🔴 Void Transactions</p>
+          <p class="sm">Explicitly out-of-scope in BRD — but BU requires it for launch</p>
+        </div>
+        <div style="background:var(--red-bg);border-left:3px solid var(--red);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--red);">🔴 Gamification (Lucky Draw / Scratch Cards)</p>
+          <p class="sm">SessionM may not support natively — needs arch assessment</p>
+        </div>
+        <div style="background:var(--red-bg);border-left:3px solid var(--red);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--red);">🔴 Referral Codes — Multi-criteria</p>
+          <p class="sm">Complex referrer + referee reward conditions not in BRD</p>
+        </div>
+        <div style="background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--orange);">🟠 Bulk Point/Voucher Mass Issuance</p>
+          <p class="sm">Requires SessionM Support today — BU wants self-serve capability</p>
+        </div>
+        <div style="background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:5px;padding:7px 10px;">
+          <p style="font-size:10.5px;font-weight:700;color:var(--orange);">🟠 Real-time Data Dashboard (No-SQL)</p>
+          <p class="sm">BU wants in-platform dashboards, not SQL queries — not specified in BRD</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wcard" style="background:var(--yellow-bg);border-color:var(--yellow);padding:10px 16px;">
+    <p style="font-size:10.5px;font-weight:800;color:var(--yellow);">⚡ Recommended Next Steps</p>
+    <div style="display:flex;gap:20px;margin-top:6px;flex-wrap:wrap;">
+      <p class="sm">1. Use <strong style="color:var(--text);">Quick Confirm tab</strong> to confirm Yes/No on each item with RWS stakeholders</p>
+      <p class="sm">2. Review <strong style="color:var(--text);">Gap Register tab</strong> — 13 items need BRD update or scope decision</p>
+      <p class="sm">3. Decide on <strong style="color:var(--red);">Void Transactions</strong> — BU needs it, BRD scopes it out</p>
+      <p class="sm">4. Add <strong style="color:var(--text);">Fraud Detection</strong> as NFR + FR to BRD v1.4</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  TAB 2: WISHLIST CARDS                             -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page" id="tab-wishlist">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <h2 style="font-size:16px;font-weight:900;">📋 All 21 Wishlist Items — Pre-filled &amp; Categorised</h2>
+    <div class="badge gap">21 items</div>
+    <div style="margin-left:auto;font-size:10px;color:var(--muted);">Click priority buttons to tag each item · Notes auto-saved in session</div>
+  </div>
+
+  <!-- PROGRAMME RULES -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--red);"></div>
+    <span class="sec-title" style="color:var(--red);">Programme Rules</span>
+    <span class="sec-count">7 items</span>
+  </div>
+  <div class="grid2">
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🛡️</span>
+        <div class="wcard-title">Fraud Detection &amp; Prevention</div></div>
+      <div class="wcard-body">Real-time anomaly detection for member accounts &amp; transactions. Customisable thresholds per store group (retail, F&B, ticketing, hotels) and spend channel. Alerts, push notifications, and pre-set suspension actions. Configurable dashboard with custom timespan and export.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD</span>
+        <span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Programme Rules</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Add discovery notes... (owner, decision, timeline)"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--orange);">
+      <div class="wcard-hdr"><span class="wcard-icon">💰</span>
+        <div class="wcard-title">Points Earning Rules — Payment Mode Eligibility</div></div>
+      <div class="wcard-body">Points earned on cash, credit, debit only. Certain stores award tier-qualifying points only (no spendable points). Eligible payment modes for points earning and tier eligibility must be configurable per store or channel.</div>
+      <div class="wcard-footer">
+        <span class="badge partial">⚠ PARTIAL — FR 9.1.6.01 covers earn rate only</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: payment mode restriction + store-level earn config not documented in BRD"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--orange);">
+      <div class="wcard-hdr"><span class="wcard-icon">🏪</span>
+        <div class="wcard-title">New Store Creation — Extended Fields</div></div>
+      <div class="wcard-body">Store fields required: RWS/3P flag · Store Name · Store Type · Store Location Group · OU/CC &amp; GL information · Unique identifier for reports. Active/inactive store differentiation.</div>
+      <div class="wcard-footer">
+        <span class="badge partial">⚠ PARTIAL — FR 9.1.4.01 exists but GL/OU fields not specified</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: OU/CC, GL info, active/inactive flag not in BRD store fields"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🔄</span>
+        <div class="wcard-title">Void Transactions</div></div>
+      <div class="wcard-body">Voided earn/redemption transactions reversed to original point source. All voids reflected in Finance reports. Same-day void restriction only.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ EXPLICITLY OUT OF SCOPE in BRD §7.03</span>
+        <span style="font-size:9.5px;color:var(--red);font-weight:700;">⚠ CONFLICT: BU needs this at launch</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn p-oos">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="DECISION NEEDED: BRD says OOS but BU wishlist includes it. Needs sponsor decision."></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">⚡</span>
+        <div class="wcard-title">Fast Track Tier Progression &amp; Partner Tier Match</div></div>
+      <div class="wcard-body">Fast track members between non-adjacent tiers (e.g. A → C). Real-time tier upgrade/downgrade based on eligible spend. Tier match with partner programs (e.g. KrisFlyer). Partner fast-track with minimum spend at RWS or partner.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD</span>
+        <span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Programme Rules</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn p-should">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: BRD covers tier rules but not partner matching or non-sequential fast-track"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">⛔</span>
+        <div class="wcard-title">Member Suspension &amp; Deletion (Two States)</div></div>
+      <div class="wcard-body">Suspended: app content accessible, no transactions, cannot re-register with same credentials. Deleted: no app login, previous credentials released for re-use.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — active_status (0/1/2) defined but logic incomplete</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="BRD has active_status 0/1/2 but suspension vs deletion business logic not documented"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">👤</span>
+        <div class="wcard-title">Pre-Created Staff Accounts (Default Password Flow)</div></div>
+      <div class="wcard-body">Pre-create provision for new staff accounts so staff download app and sign in with a default password — eliminating self-registration. Bulk employee account provisioning.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD</span>
+        <span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Programme Rules</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn p-should">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="BRD §9.1.5.16 covers employee enrolment via middleware but not pre-provisioned default password flow"></textarea>
+    </div>
+
+  </div>
+
+  <!-- MEMBER SERVICES -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--blue);"></div>
+    <span class="sec-title" style="color:var(--blue);">Member Services</span>
+    <span class="sec-count">4 items</span>
+  </div>
+  <div class="grid2">
+
+    <div class="wcard" style="border-color:var(--green);">
+      <div class="wcard-hdr"><span class="wcard-icon">🖥️</span>
+        <div class="wcard-title">Concierge Portal — Points Adjustment &amp; Member History</div></div>
+      <div class="wcard-body">Simplified concierge view with full point history (store, transaction type, amount, points earned). Point adjustments with reason code, notes for audit. Flows into finance reports for reconciliation.</div>
+      <div class="wcard-footer">
+        <span class="badge in-brd">✓ IN BRD — FR 9.1.5.18, 9.1.5.12</span>
+        <span style="font-size:9.5px;color:var(--orange);">⚠ Reason code + finance export gap</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: reason code field on adjustment + finance report export not in BRD — add to FR 9.1.5.18"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--green);">
+      <div class="wcard-hdr"><span class="wcard-icon">✏️</span>
+        <div class="wcard-title">Member Profile Update via Concierge Portal</div></div>
+      <div class="wcard-body">Concierge staff can update member information via standalone portal (not requiring app access).</div>
+      <div class="wcard-footer">
+        <span class="badge in-brd">✓ IN BRD — FR 9.1.5.03 (edit profile via API)</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Covered. Confirm if concierge portal is a separate UI or SessionM admin panel."></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--orange);">
+      <div class="wcard-hdr"><span class="wcard-icon">➕</span>
+        <div class="wcard-title">Member Account Creation via Concierge Portal</div></div>
+      <div class="wcard-body">Concierge staff can create member accounts on behalf of members without requiring the member app.</div>
+      <div class="wcard-footer">
+        <span class="badge partial">⚠ PARTIAL — FR 9.1.5.01 covers API creation but no concierge portal UI specified</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: BRD covers API-based creation but BU needs concierge portal UI for walk-in registration"></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--orange);">
+      <div class="wcard-hdr"><span class="wcard-icon">🏅</span>
+        <div class="wcard-title">Tier Adjustment — Add TQP Without Affecting Expiry</div></div>
+      <div class="wcard-body">Add tier-qualifying points (TQP) to a user's account for missing transactions without resetting the existing TQP expiry date.</div>
+      <div class="wcard-footer">
+        <span class="badge partial">⚠ PARTIAL — FR 9.1.5.19 covers tier adjust but TQP expiry preservation not specified</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: need FR clarifying that manual TQP addition preserves original expiry window"></textarea>
+    </div>
+
+  </div>
+
+  <!-- DATA -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--teal);"></div>
+    <span class="sec-title" style="color:var(--teal);">Data</span>
+    <span class="sec-count">1 item</span>
+  </div>
+  <div class="grid2">
+    <div class="wcard" style="border-color:var(--teal);">
+      <div class="wcard-hdr"><span class="wcard-icon">📊</span>
+        <div class="wcard-title">Real-time In-Platform Dashboard (No SQL Required)</div></div>
+      <div class="wcard-body">Dashboard to show real-time data with in-platform dashboard capabilities. BU currently must write SQL code to extract data — wants self-serve analytics within SessionM UI.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT FULLY IN BRD — §9.1.15 covers Data Cloud/S3 but not UI-based real-time dashboards</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn p-should">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: BRD §9.1.16 has insight reports but BU wants in-platform real-time dashboards not SQL. Confirm SessionM capability."></textarea>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--purple);"></div>
+    <span class="sec-title" style="color:var(--purple);">Campaigns</span>
+    <span class="sec-count">4 items</span>
+  </div>
+  <div class="grid2">
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🔀</span>
+        <div class="wcard-title">Mutually Exclusive / Either-Or Campaign Setup</div></div>
+      <div class="wcard-body">Allow either/or campaign logic with mutual exclusion. Example: Spend $25 on single receipt OR spend $288 with 3 receipts — member can only qualify for one. Plus rollover quantity cap per day.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — §9.1.8 has no mutual exclusion logic</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: BRD campaigns have no mutually exclusive promotion logic. Check SessionM capability — may need custom rule config."></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🔢</span>
+        <div class="wcard-title">Decimal Point Cap on Point Source Restriction</div></div>
+      <div class="wcard-body">Allow decimal point values in campaign-level point source caps. Example: restrict a campaign to award max 0.5x point multiplier.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — §9.1.7 has no decimal cap specification</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn p-should">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Needs SessionM confirmation. Add as FR to §9.1.7 or §9.1.8 campaign rules."></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🎟️</span>
+        <div class="wcard-title">Promo Codes — Custom Prefix, Points Cap, Redemption Report</div></div>
+      <div class="wcard-body">Custom promo code naming prefix (for points vs promo). Max points per user capped at campaign level for both unique and generic codes. View report of successful redemptions — currently unavailable.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — no promo code requirements in §9.1.8 or §9.1.11</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: Promo codes entirely absent from BRD. Add dedicated section under §9.1.8 or new §9.1.17 Promo Codes."></textarea>
+    </div>
+
+    <div class="wcard" style="border-color:var(--red);">
+      <div class="wcard-hdr"><span class="wcard-icon">🔗</span>
+        <div class="wcard-title">Referral Codes — Multi-criteria Referrer &amp; Referee Rewards</div></div>
+      <div class="wcard-body">Customised outcomes for referrer and referee on successful signup. Referrer gets points + vouchers when referee makes $X transaction or refers N users. Cannot currently layer multiple criteria simultaneously.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — referral not mentioned in any section</span>
+        <span style="font-size:9.5px;color:var(--orange);">⚠ Duplicate item — also listed in Referral category</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn p-should">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: Entire referral capability absent from BRD. Add new §9.1.17 Referral Codes."></textarea>
+    </div>
+
+  </div>
+
+  <!-- BULK ISSUANCE -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--yellow);"></div>
+    <span class="sec-title" style="color:var(--yellow);">Bulk Issuance</span>
+    <span class="sec-count">1 item</span>
+  </div>
+  <div class="grid2">
+    <div class="wcard" style="border-color:var(--yellow);">
+      <div class="wcard-hdr"><span class="wcard-icon">📦</span>
+        <div class="wcard-title">Mass Issuance of Points/Vouchers to Member ID List</div></div>
+      <div class="wcard-body">Self-serve bulk issuance of points or vouchers to a specific set of Membership IDs. Currently requires individual profile credits or SessionM Support Team involvement.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD — §9.1.3 covers bulk data ingestion (stores/tags) but not points/voucher mass issuance</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Gap: Add FR to §9.1.2 Data Ingestion or new §9.1.17. Confirm SessionM bulk point issuance API support."></textarea>
+    </div>
+  </div>
+
+  <!-- GAMIFICATION -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--pink);"></div>
+    <span class="sec-title" style="color:var(--pink);">Gamification</span>
+    <span class="sec-count">1 item</span>
+  </div>
+  <div class="grid2">
+    <div class="wcard" style="border-color:var(--pink);">
+      <div class="wcard-hdr"><span class="wcard-icon">🎮</span>
+        <div class="wcard-title">In-App Gamification, Lucky Draws &amp; Scratch Cards</div></div>
+      <div class="wcard-body">In-app gamification mechanics. Lucky draw capability. Random reward issuance (e.g. scratch cards). Requires integration with member app frontend.</div>
+      <div class="wcard-footer">
+        <span class="badge not-in-brd">✗ NOT IN BRD</span>
+        <span style="font-size:9.5px;color:var(--red);">⚠ SessionM may not support natively — needs architecture assessment</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn p-nice">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Needs SessionM capability check. May require custom development layer. Phase 2 candidate."></textarea>
+    </div>
+  </div>
+
+  <!-- MARKETING COMMS -->
+  <div class="sec-hdr">
+    <div class="sec-dot" style="background:var(--orange);"></div>
+    <span class="sec-title" style="color:var(--orange);">Marketing Communications</span>
+    <span class="sec-count">1 item</span>
+  </div>
+  <div class="grid2">
+    <div class="wcard" style="border-color:var(--green);">
+      <div class="wcard-hdr"><span class="wcard-icon">📣</span>
+        <div class="wcard-title">Push Notifications &amp; eDM Blast to Members</div></div>
+      <div class="wcard-body">Modules to support push notification and email direct mail (eDM) blast to loyalty members.</div>
+      <div class="wcard-footer">
+        <span class="badge in-brd">✓ IN BRD — §9.1.10 Messaging covers 10 message triggers</span>
+      </div>
+      <div class="pri-sel" onclick="setPri(this)">
+        <button class="pri-btn p-must">Must Have</button>
+        <button class="pri-btn">Should Have</button>
+        <button class="pri-btn">Nice to Have</button>
+        <button class="pri-btn">Out of Scope</button>
+      </div>
+      <textarea class="note-area" placeholder="Covered. Confirm eDM provider — Braze / SendGrid / custom? BRD does not specify the downstream messaging platform."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  TAB 3: QUICK CONFIRM                              -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page" id="tab-quickconfirm">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <h2 style="font-size:16px;font-weight:900;">⚡ Quick Confirm — Yes / No / Partial for All 21 Items</h2>
+    <div class="sm" style="margin-left:auto;">Click Yes / Partial / No on each item · Progress auto-updates</div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:12px;">
+    <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--green);">YES = Include in BRD / Build</div>
+    <div style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--orange);">PARTIAL = Scope further / Phase 2</div>
+    <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--red);">NO = Out of scope</div>
+  </div>
+
+  <div id="qc-list">
+    <!-- Programme Rules -->
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin:12px 0 6px;">Programme Rules</div>
+    <div class="yn-row" id="qc1"><span class="yn-q"><strong>Fraud Detection</strong> — Real-time anomaly detection, customisable thresholds, suspension actions, dashboard export</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc2"><span class="yn-q"><strong>Points Earning — Payment Mode Config</strong> — Configurable eligible payment modes per store group; tier-only stores</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc3"><span class="yn-q"><strong>New Store Fields</strong> — OU/CC, GL info, RWS/3P flag, active/inactive differentiation, unique report identifier</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc4" style="background:var(--red-bg);border:1px solid rgba(231,76,60,.3);">
+      <span class="yn-q"><strong style="color:var(--red);">⚠ CONFLICT — Void Transactions</strong> — BRD says out of scope. BU wishlist includes it. <span style="color:var(--red);">Sponsor decision required.</span></span>
+      <div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Phase 2</button><button class="yn-btn" onclick="setYN(this,'no')">✗ Confirm OOS</button></div>
+    </div>
+    <div class="yn-row" id="qc5"><span class="yn-q"><strong>Fast Track &amp; Partner Tier Match</strong> — Non-adjacent tier jump, KrisFlyer tier match, real-time tier updates</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc6"><span class="yn-q"><strong>Member Suspension vs Deletion</strong> — Two distinct states with different app access and credential rules</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc7"><span class="yn-q"><strong>Pre-created Staff Accounts</strong> — Default password provisioning for new staff, no self-registration needed</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin:12px 0 6px;">Member Services</div>
+    <div class="yn-row" id="qc8"><span class="yn-q"><strong>Concierge Portal — Adjust + Reason Code + Finance Export</strong> — Reason code on adjustment, flows to finance reconciliation reports</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc9"><span class="yn-q"><strong>Concierge Portal — Member Profile Update</strong> — Staff update member info via standalone portal</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc10"><span class="yn-q"><strong>Concierge Portal — Create Member Account</strong> — Walk-in registration by staff without requiring member app</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc11"><span class="yn-q"><strong>Tier Adjustment — TQP Add Without Resetting Expiry</strong> — Missing transaction recovery, preserve expiry window</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);margin:12px 0 6px;">Data</div>
+    <div class="yn-row" id="qc12"><span class="yn-q"><strong>Real-time In-Platform Dashboard</strong> — Self-serve analytics UI, no SQL code required to extract data</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);margin:12px 0 6px;">Campaigns</div>
+    <div class="yn-row" id="qc13"><span class="yn-q"><strong>Mutually Exclusive Promotions</strong> — Either/or campaign setup with rollover daily quantity cap</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc14"><span class="yn-q"><strong>Decimal Point Cap on Point Source</strong> — Allow decimal values in campaign-level point restrictions</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc15"><span class="yn-q"><strong>Promo Codes — Custom Prefix, Points Cap, Redemption Report</strong></span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+    <div class="yn-row" id="qc16"><span class="yn-q"><strong>Referral Codes — Multi-criteria Referrer &amp; Referee Rewards</strong></span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);margin:12px 0 6px;">Bulk Issuance</div>
+    <div class="yn-row" id="qc17"><span class="yn-q"><strong>Mass Points/Voucher Issuance by Member ID List</strong> — Self-serve bulk issuance, no Support Team needed</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--pink);margin:12px 0 6px;">Gamification</div>
+    <div class="yn-row" id="qc18"><span class="yn-q"><strong>In-App Gamification, Lucky Draw, Scratch Cards</strong></span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Phase 2</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin:12px 0 6px;">Marketing Communications</div>
+    <div class="yn-row" id="qc19"><span class="yn-q"><strong>Push Notifications &amp; eDM Blast</strong> — Confirm downstream messaging platform (Braze / SendGrid / other)</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Yes</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Partial</button><button class="yn-btn" onclick="setYN(this,'no')">✗ No</button></div></div>
+
+    <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);margin:12px 0 6px;">Referral</div>
+    <div class="yn-row" id="qc20"><span class="yn-q"><strong>Referral Codes (Duplicate entry)</strong> — Same as Campaign item — confirm if separate FR needed or combine</span><div class="yn-btns"><button class="yn-btn" onclick="setYN(this,'yes')">✓ Combine</button><button class="yn-btn" onclick="setYN(this,'partial')">~ Separate</button><button class="yn-btn" onclick="setYN(this,'no')">✗ Remove dup</button></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  TAB 4: GAP REGISTER                               -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page" id="tab-gaps">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <h2 style="font-size:16px;font-weight:900;">🚨 Gap Register — Items Not in Current BRD</h2>
+    <div style="background:var(--red-bg);border:1px solid var(--red);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--red);">13 Gaps</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;">
+    <div style="display:grid;grid-template-columns:28px 1fr 100px 90px 80px;gap:8px;padding:5px 10px;font-size:9.5px;font-weight:800;color:var(--muted);border-bottom:1px solid var(--border);">
+      <div>#</div><div>Gap Description</div><div>Category</div><div>Severity</div><div>BRD Action</div>
+    </div>
+
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">1</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Fraud Detection — Entirely absent from BRD</p><p class="sm">Real-time detection, thresholds per store group, alerts, suspension, configurable dashboard &amp; export</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge not-in-brd">🔴 Critical</span></div>
+      <div class="sm">Add §9.1.X Fraud Detection + NFR</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">2</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Void Transactions — BRD says OOS, BU says required</p><p class="sm">Voided earn/redemption reversed to point source, same-day only, reflected in finance reports</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge not-in-brd">🔴 CONFLICT</span></div>
+      <div class="sm">Sponsor decision — rescope or confirm OOS</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">3</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Payment Mode Eligibility Config per Store</p><p class="sm">Which payment modes (cash/card) earn points or qualify for tier — configurable per store group</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge gap">🟡 High</span></div>
+      <div class="sm">Add FR to §9.1.6 Loyalty rules</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">4</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Store GL/OU/CC Fields + Active-Inactive Flag</p><p class="sm">Store fields missing: OU/CC, GL code, active/inactive state differentiation in SessionM</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge gap">🟡 High</span></div>
+      <div class="sm">Update §9.1.4.01 store fields</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">5</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Mutually Exclusive Campaign Logic</p><p class="sm">Either/or promotions with mutual exclusion — customer qualifies for only one. Rollover daily cap.</p></div>
+      <div><span class="cat-pill" style="background:var(--purple-bg);color:var(--purple);">Campaigns</span></div>
+      <div><span class="badge not-in-brd">🔴 Critical</span></div>
+      <div class="sm">Add FR to §9.1.8 — check SessionM capability</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">6</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Promo Codes — Entirely absent from BRD</p><p class="sm">Custom prefix naming, per-user cap at campaign level for unique/generic codes, redemption report view</p></div>
+      <div><span class="cat-pill" style="background:var(--purple-bg);color:var(--purple);">Campaigns</span></div>
+      <div><span class="badge not-in-brd">🔴 Critical</span></div>
+      <div class="sm">Add new §9.1.17 Promo Codes</div>
+    </div>
+    <div class="gap-row cr">
+      <div class="gap-num" style="background:var(--red);">7</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Referral Codes — Multi-criteria rewards</p><p class="sm">Referrer + referee simultaneous rewards, layered conditions, min spend triggers — entirely absent</p></div>
+      <div><span class="cat-pill" style="background:var(--purple-bg);color:var(--purple);">Campaigns</span></div>
+      <div><span class="badge not-in-brd">🔴 Critical</span></div>
+      <div class="sm">Add new §9.1.18 Referral</div>
+    </div>
+    <div class="gap-row wa">
+      <div class="gap-num" style="background:var(--orange);">8</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Member Suspension vs Deletion Logic</p><p class="sm">Two distinct states with different app access permissions. active_status 0/1/2 exists but business rules not documented</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge partial">🟠 High</span></div>
+      <div class="sm">Expand §9.1.5 with suspension/deletion rules</div>
+    </div>
+    <div class="gap-row wa">
+      <div class="gap-num" style="background:var(--orange);">9</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Pre-created Staff Accounts — Default Password Provisioning</p><p class="sm">Bulk employee account creation with default password — no self-registration flow for TM staff</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge partial">🟠 Medium</span></div>
+      <div class="sm">Add FR to §9.1.5 employee section</div>
+    </div>
+    <div class="gap-row wa">
+      <div class="gap-num" style="background:var(--orange);">10</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Fast Track Tier &amp; Partner Tier Match (KrisFlyer)</p><p class="sm">Non-sequential tier jump and partner program tier equivalency — not in BRD loyalty rules</p></div>
+      <div><span class="cat-pill" style="background:var(--red-bg);color:var(--red);">Prog. Rules</span></div>
+      <div><span class="badge partial">🟠 Medium</span></div>
+      <div class="sm">Add FR to §9.1.6 — partner integration API needed</div>
+    </div>
+    <div class="gap-row wa">
+      <div class="gap-num" style="background:var(--orange);">11</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Mass Issuance — Self-serve Points/Vouchers to Member List</p><p class="sm">Currently requires SessionM Support Team. BU wants bulk issuance via CSV member ID list</p></div>
+      <div><span class="cat-pill" style="background:var(--yellow-bg);color:var(--yellow);">Bulk Issue</span></div>
+      <div><span class="badge partial">🟠 High</span></div>
+      <div class="sm">Add FR to §9.1.2 or new section</div>
+    </div>
+    <div class="gap-row ni">
+      <div class="gap-num" style="background:var(--yellow);color:#000;">12</div>
+      <div><p style="font-size:10.5px;font-weight:700;">In-Platform Real-time Dashboard (No SQL)</p><p class="sm">BU wants self-serve real-time analytics in SessionM UI — not just S3/Data Cloud SQL queries</p></div>
+      <div><span class="cat-pill" style="background:var(--teal-bg);color:var(--teal);">Data</span></div>
+      <div><span class="badge gap">🟡 Medium</span></div>
+      <div class="sm">Confirm SessionM UI capability; update §9.1.16</div>
+    </div>
+    <div class="gap-row ni">
+      <div class="gap-num" style="background:var(--yellow);color:#000;">13</div>
+      <div><p style="font-size:10.5px;font-weight:700;">Gamification — Lucky Draw &amp; Scratch Cards</p><p class="sm">In-app gamification mechanics — likely requires custom dev beyond SessionM out-of-box capability</p></div>
+      <div><span class="cat-pill" style="background:var(--pink-bg);color:var(--pink);">Gamific.</span></div>
+      <div><span class="badge gap">🟡 Low / P2</span></div>
+      <div class="sm">Architecture assessment needed; Phase 2</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  TAB 5: BRD COVERAGE MAP                          -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="page" id="tab-brd">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <h2 style="font-size:16px;font-weight:900;">📄 BRD Section Coverage Map</h2>
+    <p class="sm" style="margin-left:auto;">Which BRD sections need updating to cover the wishlist gaps</p>
+  </div>
+  <table>
+    <thead><tr><th>BRD Section</th><th>Current Status</th><th>Wishlist Items Covered</th><th>Gap / Action Required</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.4 Catalog &amp; Stores</td><td><span class="badge partial">⚠ Partial</span></td><td>Store creation (3 FRs)</td><td>Add OU/CC, GL, RWS/3P flag, active/inactive fields to §9.1.4.01</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.5 Customers</td><td><span class="badge partial">⚠ Partial</span></td><td>Profile update, create, tier adjust, suspend</td><td>Add suspension vs deletion logic, pre-provisioned employee accounts, TQP-preserve-expiry rule</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.6 Loyalty</td><td><span class="badge partial">⚠ Partial</span></td><td>Tier rules, earn rules</td><td>Add payment mode eligibility per store, partner tier match / fast-track FRs</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.7 Points</td><td><span class="badge partial">⚠ Partial</span></td><td>Point accounts, expiry</td><td>Add decimal point cap on campaign-level point source restriction</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.8 Campaigns</td><td><span class="badge partial">⚠ Partial</span></td><td>22 campaign FRs</td><td>Add mutually exclusive campaign logic, promo code rules, referral code rules, rollover daily cap</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.10 Messaging</td><td><span class="badge in-brd">✓ Covered</span></td><td>Push + eDM (10 triggers)</td><td>Confirm downstream messaging platform name (Braze/SendGrid/other)</td></tr>
+      <tr><td style="color:var(--green);font-weight:700;">§9.1.15 Data Cloud</td><td><span class="badge partial">⚠ Partial</span></td><td>S3 export, queries</td><td>Add real-time in-platform dashboard capability requirement</td></tr>
+      <tr><td style="color:var(--orange);font-weight:700;">§9.1.2 Data Ingestion</td><td><span class="badge partial">⚠ Partial</span></td><td>Bulk store/tag ingestion</td><td>Add bulk point/voucher mass issuance to named member ID list</td></tr>
+      <tr style="background:var(--red-bg);"><td style="color:var(--red);font-weight:700;">NEW §9.1.X — Fraud Detection</td><td><span class="badge not-in-brd">✗ NEW SECTION</span></td><td>—</td><td>New section required. Real-time detection, thresholds, alerts, actions, dashboard, export</td></tr>
+      <tr style="background:var(--red-bg);"><td style="color:var(--red);font-weight:700;">NEW §9.1.X — Void Transactions</td><td><span class="badge not-in-brd">✗ SCOPE CONFLICT</span></td><td>—</td><td>Currently OOS in §7. Sponsor to decide. If YES — new section for same-day void + finance report</td></tr>
+      <tr style="background:var(--red-bg);"><td style="color:var(--red);font-weight:700;">NEW §9.1.X — Promo Codes</td><td><span class="badge not-in-brd">✗ NEW SECTION</span></td><td>—</td><td>New section: custom prefix, per-user cap, unique vs generic code config, redemption report</td></tr>
+      <tr style="background:var(--red-bg);"><td style="color:var(--red);font-weight:700;">NEW §9.1.X — Referral Program</td><td><span class="badge not-in-brd">✗ NEW SECTION</span></td><td>—</td><td>New section: referrer/referee reward config, multi-criteria conditions, min spend triggers</td></tr>
+      <tr style="background:var(--yellow-bg);"><td style="color:var(--yellow);font-weight:700;">NEW §9.1.X — Gamification</td><td><span class="badge gap">🟡 PHASE 2</span></td><td>—</td><td>Architecture assessment first. Lucky draw, scratch card, random reward issuance — likely custom dev</td></tr>
+      <tr><td style="color:var(--orange);font-weight:700;">§9.2 Non-Functional Requirements</td><td><span class="badge not-in-brd">✗ Critically Incomplete</span></td><td>—</td><td>Add Fraud NFR, Performance targets, Availability SLA, PDPA, DR, Security scan requirements</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:16px;background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:9px;padding:12px 16px;">
+    <p style="font-size:11px;font-weight:800;color:var(--yellow);margin-bottom:8px;">📋 Recommended BRD v1.4 Change List</p>
+    <div class="grid2" style="gap:10px;font-size:10.5px;">
+      <div>
+        <p style="color:var(--red);font-weight:700;margin-bottom:4px;">🔴 New Sections to Add</p>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:3px;">
+          <li style="color:var(--muted);">→ §9.1.X Fraud Detection &amp; Prevention</li>
+          <li style="color:var(--muted);">→ §9.1.X Promo Codes</li>
+          <li style="color:var(--muted);">→ §9.1.X Referral Program</li>
+          <li style="color:var(--muted);">→ §9.1.X Void Transactions (if sponsor approves)</li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:var(--orange);font-weight:700;margin-bottom:4px;">🟠 Existing Sections to Update</p>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:3px;">
+          <li style="color:var(--muted);">→ §9.1.4 Store fields (add GL, OU, active/inactive)</li>
+          <li style="color:var(--muted);">→ §9.1.5 Add suspension/deletion logic + staff provisioning</li>
+          <li style="color:var(--muted);">→ §9.1.6 Add payment mode config + partner tier match</li>
+          <li style="color:var(--muted);">→ §9.1.8 Add mutual exclusion + rollover cap</li>
+          <li style="color:var(--muted);">→ §9.2 NFRs — add 5+ measurable targets</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setYN(btn, type) {
+  const btns = btn.parentElement.querySelectorAll('.yn-btn');
+  btns.forEach(b => { b.classList.remove('yes-sel','no-sel','partial-sel'); });
+  if(type==='yes') btn.classList.add('yes-sel');
+  else if(type==='no') btn.classList.add('no-sel');
+  else btn.classList.add('partial-sel');
+  updateProgress();
+}
+
+function setPri(container) { /* handled by click delegation via individual buttons */ }
+
+document.querySelectorAll('.pri-sel button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const btns = this.parentElement.querySelectorAll('button');
+    btns.forEach(b => { b.classList.remove('p-must','p-should','p-nice','p-oos'); });
+    const labels = ['Must Have','Should Have','Nice to Have','Out of Scope'];
+    const cls = ['p-must','p-should','p-nice','p-oos'];
+    const idx = Array.from(btns).indexOf(this);
+    if(idx >= 0) this.classList.add(cls[idx]);
+  });
+});
+
+function updateProgress() {
+  const total = document.querySelectorAll('.yn-row').length;
+  const answered = document.querySelectorAll('.yn-btn.yes-sel, .yn-btn.no-sel, .yn-btn.partial-sel').length;
+  const pct = Math.round((answered / total) * 100);
+  document.getElementById('mainprog').style.width = pct + '%';
+  document.getElementById('progpct').textContent = pct + '%';
+  const colors = pct < 40 ? 'var(--red)' : pct < 75 ? 'var(--yellow)' : 'var(--green)';
+  document.getElementById('progpct').style.color = colors;
+}
+</script>
+</body>
+</html>
